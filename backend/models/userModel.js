@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const userSchema = mongoose.Schema({
-  cccd: {
+  identification: {
     type: String,
     required: true,
     unique: true,
@@ -23,6 +23,8 @@ const userSchema = mongoose.Schema({
     required: false,
   },
 });
+
+userSchema.index({ identification: 1 }).unique(true);
 
 const User = mongoose.model("User", userSchema);
 

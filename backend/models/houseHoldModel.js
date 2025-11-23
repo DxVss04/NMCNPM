@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const memberschema = mongoose.Schema({
-  cccd: {
+  identification: {
     type: String,
     required: true,
   },
@@ -28,17 +28,15 @@ const houseHoldschema = mongoose.Schema({
     type: String, // ten chu ho
     required: true,
   },
-  cccdhead: {
+
+  identification_head: {
     type: String,
     required: true,
   },
-  active: {
-    type: Boolean,
-    required: true,
-    default: false,
-  },
   members: [memberschema],
 });
+
+houseHoldschema.index({ identification_head: 1 }, { unique: true });
 
 const HouseHold = mongoose.model("HouseHold", houseHoldschema);
 
