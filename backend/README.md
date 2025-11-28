@@ -85,10 +85,7 @@ Frontend cần đảm bảo middleware xác thực cung cấp thông tin ngườ
 
 - **Method:** PATCH
 
-- **Path:** `/api/house-hold/update-hosehold`
-
-  - **CHÚ Ý:** route đang bị sai chính tả (`hosehold`).
-    Bạn phải gọi đúng đường dẫn này trừ khi sửa backend.
+- **Path:** `/api/house-hold/update-household`
 
 - **Auth:** bắt buộc (`req.user._id`)
 
@@ -127,13 +124,11 @@ Frontend cần đảm bảo middleware xác thực cung cấp thông tin ngườ
 
 ---
 
-### 4. Các controller khác (chưa có route)
+### 4. Additional endpoints (now exposed)
 
-- **getAllHouseHolds** — GET có phân trang (page=N), trả về 50 item/page
-  → nên thêm route như: `GET /api/house-hold?page=1`
+- **getAllHouseHolds** — GET `/api/house-hold/all-households` — optionally paginated via ?page=N (50 items per page)
 
-- **deleteHouseHold** — xóa hộ theo chủ hộ
-  → nên thêm route: `DELETE /api/house-hold/delete-household`
+- **deleteHouseHold** — DELETE `/api/house-hold/delete-household` — only the head of household can delete their household
 
 ---
 
@@ -157,10 +152,23 @@ curl -X GET "http://localhost:5000/api/house-hold/read-household/ID001"
 ### Cập nhật household (cần token)
 
 ```sh
-curl -X PATCH "http://localhost:5000/api/house-hold/update-hosehold" \
+curl -X PATCH "http://localhost:5000/api/house-hold/update-household" \
  -H "Content-Type: application/json" \
  -H "Authorization: Bearer <token>" \
  -d '{ "name": "Nguyen Family Updated", "address": "456 Nguyen Hue" }'
+```
+
+### Lấy danh sách toàn bộ households (paginated)
+
+```sh
+curl -X GET "http://localhost:5000/api/house-hold/all-households?page=1"
+```
+
+### Xoá household (cần token - chỉ chủ hộ)
+
+```sh
+curl -X DELETE "http://localhost:5000/api/house-hold/delete-household" \
+ -H "Authorization: Bearer <token>"
 ```
 
 ---
