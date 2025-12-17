@@ -1,5 +1,5 @@
 import HouseHold from "../models/houseHoldModel.js";
-import Bill from "../models/billModel.js";
+import Bill from "../models/bill.js";
 
 // I.Create bill
 

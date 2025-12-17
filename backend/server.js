@@ -1,8 +1,9 @@
 import express from "express";
 import cors from "cors";
 import connectDB from "./config/connectDB.js";
-import houseHoldRoutes from "./routes/houseHoldRoute.js";
+import houseHoldRoutes from "./routes/houseHoldRoutes.js";
 import billRoutes from "./routes/billsRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -22,6 +23,10 @@ app.get("/", (req, res) => {
 
 app.use("/api/house-hold", houseHoldRoutes);
 app.use("/api/bills", billRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/transactions", transactionRoutes);
+
+// Start the server
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
