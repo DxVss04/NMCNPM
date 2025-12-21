@@ -4,6 +4,7 @@ import connectDB from "./config/connectDB.js";
 import houseHoldRoutes from "./routes/houseHoldRoutes.js";
 import billRoutes from "./routes/billsRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import transactionRoutes from "./routes/transactionRoutes.js";
 import dotenv from "dotenv";
 dotenv.config();
 

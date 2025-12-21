@@ -1,4 +1,4 @@
-import HouseHold from "../models/houseHoldModel";
+import HouseHold from "../models/houseHoldModel.js";
 import Transaction from "../models/transaction.js";
 import Bill from "../models/bill.js";
 

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import HouseHold from "./houseHoldModel";
+import HouseHold from "./houseHoldModel.js";
 
 const billItemSchema = new mongoose.Schema({
   //Chi so cu cua hoa don
