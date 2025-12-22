@@ -6,8 +6,6 @@ import billRoutes from "./routes/billsRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-
-import transactionRoutes from "./routes/transactionRoutes.js";
 import dotenv from "dotenv";
 dotenv.config();
 //aa
