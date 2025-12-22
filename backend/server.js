@@ -10,7 +10,7 @@ import authRoutes from "./routes/authRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import dotenv from "dotenv";
 dotenv.config();
-
+//aa
 // Connect to database
 connectDB();
 
