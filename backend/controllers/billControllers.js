@@ -3,31 +3,92 @@ import Bill from "../models/bill.js";
 
 // I.Create bill
 
-export const createBill = async (req, res) => {
-  try {
-    const { Identification_head, amount, dueDate } = req.body;
+const ELECTRIC_UNIT_PRICE = 3000;
+const WATER_UNIT_PRICE = 15000;
+const GARBAGE_UNIT_PRICE = 25000;
+const MANAGEMENT_UNIT_PRICE = 100000; // giá tiền dịch vụ quản lý nhà chung cư
+const PARKING_UNIT_PRICE = 70000; // giá tiền dịch vụ gửi xe
 
-    // Verify household exists
-    const household = await HouseHold.findOne({
-      identification_head: Identification_head,
-    });
-    // Kiem tra ho gia dinh ton tai
+//1.---Admin tạo hóa đơn cho hộ dân
+
+export const adminCreateBill = async (req, res) => {
+  try {
+    const {
+      identification_head,
+      type,
+      oldIndex,
+      newIndex,
+      dueDate,
+      description,
+    } = req.body;
+
+    const household = await HouseHold.findOne({ identification_head });
     if (!household) {
       return res.status(404).json({ message: "Household not found" });
     }
-    //Tao hoa don moi
+
+    let unitPrice = 0;
+    let amount = 0;
+    let billItem = {};
+
+    // Các loại có chỉ số
+    if (type === "electricity" || type === "water") {
+      if (newIndex == null || oldIndex == null || newIndex <= oldIndex) {
+        return res.status(400).json({ message: "Invalid meter index" });
+      }
+
+      unitPrice =
+        type === "electricity"
+          ? ELECTRIC_UNIT_PRICE
+          : WATER_UNIT_PRICE;
+
+      amount = (newIndex - oldIndex) * unitPrice;
+
+      billItem = {
+        oldIndex,
+        newIndex,
+        unitPrice,
+        amount,
+        dueDate,
+      };
+    }
+
+    // Các loại phí cố định
+    else if (type === "garbage") {
+      unitPrice = GARBAGE_UNIT_PRICE;
+      amount = unitPrice;
+      billItem = { unitPrice, amount, dueDate };
+    } 
+    else if (type === "management") {
+      unitPrice = MANAGEMENT_UNIT_PRICE;
+      amount = unitPrice;
+      billItem = { unitPrice, amount, dueDate };
+    } 
+    else if (type === "parking") {
+      unitPrice = PARKING_UNIT_PRICE;
+      amount = unitPrice;
+      billItem = { unitPrice, amount, dueDate };
+    } 
+    else {
+      return res.status(400).json({ message: "Invalid bill type" });
+    }
+
     const newBill = new Bill({
-      Identification_head,
-      amount,
-      dueDate,
-      status: "unpaid",
+      houseHold: household._id,
+      type,
+      description,
+      billItem: [billItem],
     });
-    const savedBill = await newBill.save();
-    res.status(201).json(savedBill);
+
+    await newBill.save();
+    res.status(201).json(newBill);
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 // II.Read bills
 /*--------------USER------------------*/
 
