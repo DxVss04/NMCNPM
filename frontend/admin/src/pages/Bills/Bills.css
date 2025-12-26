@@ -1,0 +1,13 @@
+.admin-main-content{
+  margin-left: 240px; /* leave space for .admin-sidebar (220px + padding) */
+  padding: 16px 16px 16px 12px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 720px){
+  /* On small screens the sidebar becomes a top bar (56px high) */
+  .admin-main-content{
+    margin-left: 0;
+    margin-top: 56px;
+  }
+}

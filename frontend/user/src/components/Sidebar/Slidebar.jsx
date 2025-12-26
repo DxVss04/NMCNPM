@@ -1,20 +1,35 @@
 import { NavLink } from "react-router-dom";
-
+import React from "react";
+import "./Slidebar.css";
+import { Images } from "../../assets/assets";
 
 export default function Sidebar() {
-return (
-<aside className="sidebar">
-<h2>Blue Moon</h2>
-<nav>
-    <li><NavLink to="/home" className={({ isActive }) => isActive ? "active" : ""}>Home</NavLink></li>
-    <li><NavLink to="/profile" className={({ isActive }) => isActive ? "active" : ""}>Profile</NavLink></li>
-    <li><NavLink to="/members" className={({ isActive }) => isActive ? "active" : ""}>Members</NavLink></li>
-    <li><NavLink to="/bills" className={({ isActive }) => isActive ? "active" : ""}>Bills</NavLink></li>
-    <li><NavLink to="/history" className={({ isActive }) => isActive ? "active" : ""}>History</NavLink></li>
-    <li><NavLink to="/notifications" className={({ isActive }) => isActive ? "active" : ""}>Notifications</NavLink></li>
-    <li><NavLink to="/contact" className={({ isActive }) => isActive ? "active" : ""}>Contact</NavLink></li>
-</nav>
-</aside>
-
-);
+    return (
+        <aside className="sidebar">
+            <h2 className="sb-brand">Blue Moon</h2>
+            <img src={Images.logo} alt="Blue Moon logo" className="sb-logo" />
+            <nav>
+                <ul>
+                    <li>
+                        <NavLink to="/profile" className={({ isActive }) => (isActive ? "active" : "")}>Hồ sơ</NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/members" className={({ isActive }) => (isActive ? "active" : "")}>Thành viên</NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/bills" className={({ isActive }) => (isActive ? "active" : "")}>Hóa đơn</NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>Lịch sử</NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/posts" className={({ isActive }) => (isActive ? "active" : "")}>Thông báo</NavLink>
+                    </li>
+                    <li>
+                        <NavLink to="/contact" className={({ isActive }) => (isActive ? "active" : "")}>Liên hệ</NavLink>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+    );
 }

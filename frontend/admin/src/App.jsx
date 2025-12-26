@@ -18,7 +18,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
-    <div className="app-layout">
+    <div className={`app-layout ${isLoggedIn ? 'with-sidebar' : ''}`}>
      {isLoggedIn && <Sidebar />}
       <div className="content">
         <Routes>

@@ -3,7 +3,7 @@
 }
 
 .stats-page{
-  padding: 24px 28px;
+  padding: 24px 28px 24px 12px;
   margin-left: 220px; /* avoid covering the fixed sidebar */
   transition: margin .12s ease;
 }

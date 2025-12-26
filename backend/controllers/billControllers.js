@@ -11,7 +11,7 @@ const PARKING_UNIT_PRICE = 70000; // giá tiền dịch vụ gửi xe
 
 //1.---Admin tạo hóa đơn cho hộ dân
 
-export const adminCreateBill = async (req, res) => {
+export const createBill = async (req, res) => {
   try {
     const {
       identification_head,

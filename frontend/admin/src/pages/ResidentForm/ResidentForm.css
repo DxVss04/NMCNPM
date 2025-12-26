@@ -1,7 +1,7 @@
 :root{ --primary: #6366F1; }
 
 .resident-form-page{
-  padding: 20px 28px;
+  padding: 20px 28px 20px 12px;
   margin-left: 220px;
 }
 
