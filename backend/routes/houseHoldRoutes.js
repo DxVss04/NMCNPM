@@ -1,9 +1,11 @@
 import {
   createHouseHold,
-  updateHouseHold,
+  addMemberToHouseHold,
   getHouseHoldByHeadIdentification,
   getAllHouseHolds,
   deleteHouseHold,
+  removeMemberFromHouseHold,
+  handleHeadRemoval,
 } from "../controllers/houseHoldControllers.js";
 import express from "express";
 
@@ -11,7 +13,8 @@ const router = express.Router();
 //I.Create household
 router.post("/create-household", createHouseHold);
 //II.Update household
-router.patch("/update-household", updateHouseHold);
+router.patch("/add-member", addMemberToHouseHold);
+router.patch("/remove-member", removeMemberFromHouseHold);
 //III.Read household
 //1.Read household By identification_head
 router.get(
@@ -22,4 +25,5 @@ router.get(
 router.get("/all-households", getAllHouseHolds);
 //III. Delete household (only head of household allowed)
 router.delete("/delete-household", deleteHouseHold);
+router.delete("/handle-head-removal", handleHeadRemoval);
 export default router;

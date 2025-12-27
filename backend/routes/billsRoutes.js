@@ -1,5 +1,5 @@
 import {
-  createBill,
+  adminCreateBill,
   getBillsByType,
   getPaidBillsByHousehold,
   getUnpaidBillsByHousehold,
@@ -15,7 +15,7 @@ import express from "express";
 const router = express.Router();
 
 //I.Create bill
-router.post("/create-bill", createBill);
+router.post("/create-bill", adminCreateBill);
 //II.Read bills
 //1.---Đọc tất cả hóa đơn theo loại phí
 router.get("/bills/type/:type", getBillsByType);

@@ -64,6 +64,4 @@ const billSchema = new mongoose.Schema({
   billItem: [billItemSchema],
 });
 
-const Bill = mongoose.model("Bill", billSchema);
-
-export default Bill;
+export default mongoose.models.Bill || mongoose.model("Bill", billSchema);
