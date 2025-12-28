@@ -189,3 +189,30 @@ curl -X DELETE "http://localhost:5000/api/house-hold/delete-household" \
 - Nếu trước đó có dùng ObjectId, có thể cần migration khi chuyển sang ID dạng string.
 
 ---
+
+## Thêm sửa thông tin cho user:<version mới nhất>
+
+- URL: http://localhost:5000/api/user/update-profile
+
+- input: {
+  "identification": "001234567890",
+  "phone": "0922222222",
+  "currentPassword": "123456",
+  "newPassword": "newpass789"
+  }
+
+- output: {
+  "message": "Profile updated successfully",
+  "user": {
+  "\_id": "6950e95b17ab2eb56dc1ca10",
+  "identification": "001234567890",
+  "name": "Nguyễn Văn Test",
+  "phone": "0922222222",
+  "address": "123 Đường Test, Hà Nội",
+  "dob": "1995-01-15T00:00:00.000Z"
+  }
+  }
+
+## Thêm thành viên
+
+- URL:
