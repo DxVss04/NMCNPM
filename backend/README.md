@@ -215,4 +215,27 @@ curl -X DELETE "http://localhost:5000/api/house-hold/delete-household" \
 
 ## Thêm thành viên
 
-- URL:
+- URL:http://localhost:5000/api/house-hold/add-member
+
+- input:{
+  "houseHoldId": "68efc1195ffbd315ee8eccf4",
+  "newMemberId": "694ebc246c99312e570a4abd",
+  "relationship": "Con",
+  "identification": "123456789012",
+  "name": "Nguyễn Văn A"
+  }
+
+- output:
+  {
+  "message": "Member added successfully",
+  "household": {
+  "id": "68efc1195ffbd315ee8eccf4",
+  "identification_head": "ID3001"
+  },
+  "newMember": {
+  "id": "694ebc246c99312e570a4abd",
+  "name": "Nguyễn Văn A",
+  "relationship": "Con",
+  "identification": "123456789012"
+  }
+  }
