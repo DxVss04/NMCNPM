@@ -195,7 +195,7 @@ export const removeMemberFromHouseHold = async (req, res) => {
 // Xóa sạch household và cập nhật thông tin user
 export const deleteHouseHold = async (req, res) => {
   try {
-    const { householdId } = req.body;
+    const { householdId } = req.params;
 
     // Kiểm tra household có tồn tại không
     const houseHoldInfo = await HouseHold.findById(householdId);

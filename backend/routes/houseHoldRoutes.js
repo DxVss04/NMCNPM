@@ -25,5 +25,5 @@ router.get(
 router.get("/all-households", getAllHouseHolds);
 //III. Delete household (only head of household allowed)
 router.delete("/delete-household", deleteHouseHold);
-router.delete("/handle-head-removal", handleHeadRemoval);
+router.delete("/handle-head-removal/:householdId", handleHeadRemoval);
 export default router;
