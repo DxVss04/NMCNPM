@@ -1,7 +1,0 @@
-.admin-main-content{ padding:16px }
-
-table input{ padding:4px }
-
-@media (max-width:720px){
-  .admin-main-content{ padding:8px }
-}

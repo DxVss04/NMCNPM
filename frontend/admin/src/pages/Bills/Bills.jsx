@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import './Bills.css'
 import { Link, useNavigate } from 'react-router-dom'
-import Backbutton from '../../components/Backbutton/Backbutton'
 
 const STORAGE_KEY = 'admin_bills'
 
