@@ -239,3 +239,39 @@ curl -X DELETE "http://localhost:5000/api/house-hold/delete-household" \
   "identification": "123456789012"
   }
   }
+
+## Tạo hóa đơn(1 loại phí nhé tí muốn thì nói cuso gộp lại thành 1 bill lớn cho)
+
+URL:http://localhost:5000/api/bills/create-bill\
+
+- input:{
+  "identification_head": "ID2001",
+  "type": "electricity",
+  "oldIndex": 100,
+  "newIndex": 150,
+  "dueDate": "2025-12-31"
+  }
+
+- output:
+  {
+  "message": "Bill created successfully",
+  "bill": {
+  "houseHold": "68efc1195ffbd315ee8eccf3",
+  "type": "electricity",
+  "billItem": [
+  {
+  "oldIndex": 100,
+  "newIndex": 150,
+  "unitPrice": 3000,
+  "amount": 150000,
+  "dueDate": "2025-12-31T00:00:00.000Z",
+  "status": false,
+  "paidAt": null,
+  "_id": "695142c75eace3e7a4952f9a",
+  "createdAt": "2025-12-28T14:46:31.136Z"
+  }
+  ],
+  "\_id": "695142c75eace3e7a4952f99",
+  "\_\_v": 0
+  }
+  }
