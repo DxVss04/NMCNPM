@@ -1,6 +1,6 @@
 import HouseHold from "../models/houseHoldModel.js";
 import Transaction from "../models/Transaction.js";
-import Bill from "../models/Bill.js";
+import Bill from "../models/bill.js";
 
 //I.Create transaction
 //1.---Tao giao dich + cap nhat hoa don

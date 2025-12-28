@@ -82,49 +82,55 @@ export const getAllHouseHolds = async (req, res) => {
 
 export const addMemberToHouseHold = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { newMemberId } = req.body; // ID của user muốn thêm
+    const { houseHoldId, newMemberId, relationship, identification, name } =
+      req.body;
 
-    const userInfo = await User.findById(userId);
-    if (!userInfo.household) {
-      return res
-        .status(404)
-        .json({ message: "You do not belong to any household" });
+    // 1. Kiểm tra household có tồn tại không
+    const houseHoldInfo = await HouseHold.findById(houseHoldId);
+    if (!houseHoldInfo) {
+      return res.status(404).json({ message: "Household not found" });
     }
 
-    const houseHoldInfo = await HouseHold.findById(userInfo.household);
-    if (houseHoldInfo.namehead !== userInfo.name) {
-      return res
-        .status(403)
-        .json({ message: "Only the head of household can add members" });
-    }
-
-    // Kiểm tra user muốn thêm có tồn tại không
+    // 2. Kiểm tra user muốn thêm có tồn tại không
     const newMember = await User.findById(newMemberId);
     if (!newMember) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Kiểm tra user đã thuộc hộ nào chưa
+    // 3. Kiểm tra user đã thuộc hộ nào chưa
     if (newMember.household) {
-      return res
-        .status(400)
-        .json({ message: "User already belongs to another household" });
+      return res.status(400).json({
+        message: "User already belongs to another household",
+      });
     }
 
-    // Thêm user vào hộ
-    newMember.household = userInfo.household;
+    // 4. Thêm user vào hộ
+    newMember.household = houseHoldId;
     await newMember.save();
 
-    // Nếu HouseHold có field members array, thêm vào
+    // 5. Thêm vào mảng members của household với đầy đủ thông tin
     if (houseHoldInfo.members) {
-      houseHoldInfo.members.push(newMemberId);
+      houseHoldInfo.members.push({
+        _id: newMemberId,
+        name: name || newMember.name, // Ưu tiên name từ request, fallback sang name từ User
+        identification: identification,
+        relationship: relationship,
+      });
       await houseHoldInfo.save();
     }
 
     res.status(200).json({
       message: "Member added successfully",
-      newMember: newMember.name,
+      household: {
+        id: houseHoldInfo._id,
+        identification_head: houseHoldInfo.identification_head,
+      },
+      newMember: {
+        id: newMember._id,
+        name: name || newMember.name,
+        relationship: relationship,
+        identification: identification,
+      },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

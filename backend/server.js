@@ -6,9 +6,9 @@ import billRoutes from "./routes/billsRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import transactionRoutes from "./routes/transactionRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import dotenv from "dotenv";
 dotenv.config();
-//aa
 // Connect to database
 connectDB();
 
@@ -28,6 +28,7 @@ app.use("/api/bills", billRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 // Start the server
 
