@@ -275,3 +275,44 @@ URL:http://localhost:5000/api/bills/create-bill\
   "\_\_v": 0
   }
   }
+
+## Đọc tất cả hóa đơn của 1 hộ(user tự đọc)
+
+URL:http://localhost:5000/api/bills/households/ID4001/bills
+
+- input: không cần nhập kích vô là đc
+- output:
+  {
+  "household": {
+  "id": "68efc1195ffbd315ee8eccf5",
+  "name": "Ho Pham",
+  "identification_head": "ID4001"
+  },
+  "total": 1,
+  "bills": [
+  {
+  "\_id": "695150d55eace3e7a4952fa6",
+  "houseHold": {
+  "\_id": "68efc1195ffbd315ee8eccf5",
+  "namehousehold": "Ho Pham",
+  "address": "102 Tran Phu, Hue",
+  "identification_head": "ID4001"
+  },
+  "type": "garbage",
+  "billItem": [
+  {
+  "oldIndex": 0,
+  "newIndex": 0,
+  "unitPrice": 25000,
+  "amount": 25000,
+  "dueDate": "2025-12-31T00:00:00.000Z",
+  "status": false,
+  "paidAt": null,
+  "_id": "695150d55eace3e7a4952fa7",
+  "createdAt": "2025-12-28T15:46:29.879Z"
+  }
+  ],
+  "\_\_v": 0
+  }
+  ]
+  }
