@@ -400,3 +400,26 @@ URL:http://localhost:5000/api/bills/get-bills
     ]
 }
 ```
+
+## User đọc thông tin cá nhân của mình:
+
+```json
+URL:http://localhost:5000/api/user/my-profile
+
+-input:{
+"userId": "694ebc246c99312e570a4abd"
+}
+
+- output:
+{
+    "message": "Profile retrieved successfully",
+    "user": {
+        "_id": "694ebc246c99312e570a4abd",
+        "identification": "001095001234",
+        "name": "Nguyễn Văn A",
+        "phone": "0912345611",
+        "address": "Số 123 Đường ABC, Quận 1, TP. Hồ Chí Minh",
+        "dob": "1995-10-25T00:00:00.000Z"
+    }
+}
+```
