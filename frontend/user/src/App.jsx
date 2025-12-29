@@ -1,42 +1,30 @@
-import { Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./components/Context/AuthContext.jsx";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login/Login.jsx";
-import Register from "./pages/Register/Register.jsx";
-import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
 import Profile from "./pages/Profile/Profile.jsx";
-import Members from "./pages/Members/Members.jsx";
 import Bills from "./pages/Bills/Bills.jsx";
 import Posts from "./pages/Posts/Posts.jsx";
-import Contact from "./components/Footer/Footer.jsx";
-import History from "./components/History/History.jsx";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
+import Layout from "./components/Layout/Layout.jsx";
 import React from "react";
-import DashboardLayout from "./components/Layout/DashboardLayout.jsx";
-
 
 export default function App() {
-	return (
-		<AuthProvider>
-			<Routes>
-				<Route path="/login" element={<Login />} />
-				<Route path="/register" element={<Register />} />
+  return (
+    <Routes>
+      {/* Login - Trang đầu tiên */}
+      <Route path="/login" element={<Login />} />
 
-				<Route
-					path="/"
-					element={
-						<ProtectedRoute>
-							<DashboardLayout />
-						</ProtectedRoute>
-					}
-				>
-					<Route index element={<Profile />} />
-					<Route path="profile" element={<Profile />} />
-					<Route path="members" element={<Members />} />
-					<Route path="bills" element={<Bills />} />
-					<Route path="posts" element={<Posts />} />
-					<Route path="history" element={<History />} />
-					<Route path="contact" element={<Contact />} />
-				</Route>
-			</Routes>
-		</AuthProvider>
-	);
+      {/* Protected system - Chỉ truy cập được sau khi login */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Navigate to="/profile" replace />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/bills" element={<Bills />} />
+          <Route path="/posts" element={<Posts />} />
+        </Route>
+      </Route>
+
+      {/* Fallback - Redirect về login nếu chưa đăng nhập */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
 }

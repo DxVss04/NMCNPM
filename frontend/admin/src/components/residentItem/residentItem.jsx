@@ -157,3 +157,5 @@ const ResidentItem = ({ household, onDelete, onAddMember, onEditMember, onDelete
 
 export default ResidentItem;
 
+
+

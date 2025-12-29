@@ -7,10 +7,7 @@ export const updateUserProfile = async (req, res) => {
   try {
     const {
       identification,
-      name,
       phone,
-      address,
-      dob,
       currentPassword,
       newPassword,
     } = req.body;
@@ -26,11 +23,10 @@ export const updateUserProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Cập nhật thông tin cơ bản
-    if (name) user.name = name;
-    if (phone) user.phone = phone;
-    if (address) user.address = address;
-    if (dob) user.dob = dob;
+    // Cập nhật phone (nếu có)
+    if (phone !== undefined) {
+      user.phone = phone;
+    }
 
     // Đổi mật khẩu (nếu có)
     if (newPassword) {
@@ -76,20 +72,16 @@ export const updateUserProfile = async (req, res) => {
 // User lấy thông tin cá nhân
 
 // User xem thông tin của chính mình (đã login)
-// Lấy thông tin user qua body
+// Lấy thông tin user qua query params (identification)
 export const getMyProfile = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { identification } = req.query;
 
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
+    if (!identification) {
+      return res.status(400).json({ message: "Identification is required" });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ message: "Invalid user ID format" });
-    }
-
-    const user = await User.findById(userId);
+    const user = await User.findOne({ identification: identification });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

@@ -1,11 +1,11 @@
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../Context/AuthContext.jsx";
+import { Navigate, Outlet } from "react-router-dom";
+import { isAuthenticated } from "../localStorage/authStorage";
 
+export default function ProtectedRoute() {
+  // Kiểm tra authentication từ sessionStorage
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
 
-export default function ProtectedRoute({ children }) {
-const { user, loading } = useAuth();
-if (loading) {
-  return <div>Loading...</div>;
-}
-return user ? children : <Navigate to="/login" />;
+  return <Outlet />;
 }

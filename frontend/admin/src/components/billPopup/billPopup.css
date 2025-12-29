@@ -107,19 +107,52 @@
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.form-note {
-  background: #f0f4ff;
-  border-left: 4px solid #667eea;
-  padding: 12px 16px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+.bill-type-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
 }
 
-.form-note p {
-  margin: 0;
-  font-size: 13px;
-  color: #667eea;
-  line-height: 1.5;
+.bill-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  gap: 8px;
+}
+
+.bill-type-card:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.bill-type-card.selected {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.bill-type-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.bill-type-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.bill-type-card.selected .bill-type-label {
+  color: white;
 }
 
 .form-actions {
@@ -186,6 +219,10 @@
     padding: 20px;
   }
 
+  .bill-type-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .form-actions {
     flex-direction: column-reverse;
   }
@@ -195,6 +232,5 @@
     width: 100%;
   }
 }
-
 
 
