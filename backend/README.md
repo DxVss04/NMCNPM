@@ -457,3 +457,16 @@ URL:http://localhost:5000/api/bills/update-bill-item/694e92b2ccf70a2ab8fb5e32/69
     }
 }
 ```
+
+## Thống kê tổng số hộ
+
+```JSON
+URL: http://localhost:5000/api/house-hold/statistics
+
+- input: k cần
+- output:
+{
+    "message": "Total households retrieved successfully",
+    "totalHouseholds": 6
+}
+```
