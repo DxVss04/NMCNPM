@@ -1,92 +1,69 @@
-import React, { useState } from "react";
-import "./passPopup.css";
+import React, { useState, useEffect } from 'react';
+import './passPopup.css';
 
-const PassPopup = ({ identification, onClose, onSubmit, loading }) => {
+const PassPopup = ({ identification, phone, onClose, onSubmit, loading, error }) => {
   const [formData, setFormData] = useState({
-    identification: identification || "",
-    oldPassword: "",
-    newPassword: "",
+    identification: identification || '',
+    phone: phone || '',
+    currentPassword: '',
+    newPassword: '',
   });
-  const [error, setError] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [localError, setLocalError] = useState('');
+
+  // Cập nhật formData khi props thay đổi
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      identification: identification || '',
+      phone: phone || '',
+    }));
+  }, [identification, phone]);
+
+  // Reset local error when form data changes
+  useEffect(() => {
+    if (localError) {
+      setLocalError('');
+    }
+  }, [formData.currentPassword, formData.newPassword]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "confirmPassword") {
-      setConfirmPassword(value);
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-    setError("");
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError("");
-
+    setLocalError('');
+    
     // Validation
-    if (!formData.oldPassword || !formData.newPassword || !confirmPassword) {
-      setError("Vui lòng nhập đầy đủ thông tin.");
-      return;
-    }
-
-    if (formData.newPassword !== confirmPassword) {
-      setError("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+    if (!formData.currentPassword || !formData.newPassword) {
+      setLocalError('Vui lòng nhập đầy đủ thông tin.');
       return;
     }
 
     if (formData.newPassword.length < 6) {
-      setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+      setLocalError('Mật khẩu mới phải có ít nhất 6 ký tự.');
       return;
     }
 
-    if (formData.oldPassword === formData.newPassword) {
-      setError("Mật khẩu mới phải khác mật khẩu cũ.");
-      return;
-    }
-
-    try {
-      await onSubmit(formData);
-      // Reset form on success
-      setFormData({
-        identification: identification || "",
-        oldPassword: "",
-        newPassword: "",
-      });
-      setConfirmPassword("");
-    } catch (err) {
-      // Error is handled in parent component
-    }
-  };
-
-  const handleClose = () => {
-    setFormData({
-      identification: identification || "",
-      oldPassword: "",
-      newPassword: "",
-    });
-    setConfirmPassword("");
-    setError("");
-    onClose();
+    // Gọi callback từ parent component
+    onSubmit(formData);
   };
 
   return (
-    <div className="pass-popup-overlay" onClick={handleClose}>
+    <div className="pass-popup-overlay" onClick={onClose}>
       <div className="pass-popup-container" onClick={(e) => e.stopPropagation()}>
         <div className="pass-popup-header">
-          <h2 className="pass-popup-title">Đổi mật khẩu</h2>
-          <button className="pass-popup-close" onClick={handleClose}>
+          <h3 className="pass-popup-title">Đổi mật khẩu</h3>
+          <button className="pass-popup-close" onClick={onClose}>
             ×
           </button>
         </div>
 
-        {error && (
+        {(error || localError) && (error !== '' || localError !== '') && (
           <div className="pass-popup-error">
             <span className="error-icon">⚠️</span>
-            <span>{error}</span>
+            <span>{error || localError}</span>
           </div>
         )}
 
@@ -97,28 +74,44 @@ const PassPopup = ({ identification, onClose, onSubmit, loading }) => {
               CCCD / CMND
             </label>
             <input
-              type="text"
               className="form-input"
+              type="text"
+              name="identification"
               value={formData.identification}
-              readOnly
               disabled
+              readOnly
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">
+              <span className="label-icon">📱</span>
+              Số điện thoại
+            </label>
+            <input
+              className="form-input"
+              type="text"
+              name="phone"
+              value={formData.phone}
+              disabled
+              readOnly
             />
           </div>
 
           <div className="form-group">
             <label className="form-label">
               <span className="label-icon">🔒</span>
-              Mật khẩu cũ
+              Mật khẩu hiện tại
             </label>
             <input
-              type="password"
-              name="oldPassword"
               className="form-input"
-              value={formData.oldPassword}
+              type="password"
+              name="currentPassword"
+              value={formData.currentPassword}
               onChange={handleChange}
-              placeholder="Nhập mật khẩu cũ"
+              placeholder="Nhập mật khẩu hiện tại"
               disabled={loading}
-              autoComplete="current-password"
+              required
             />
           </div>
 
@@ -128,46 +121,30 @@ const PassPopup = ({ identification, onClose, onSubmit, loading }) => {
               Mật khẩu mới
             </label>
             <input
+              className="form-input"
               type="password"
               name="newPassword"
-              className="form-input"
               value={formData.newPassword}
               onChange={handleChange}
               placeholder="Nhập mật khẩu mới"
               disabled={loading}
-              autoComplete="new-password"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
-              <span className="label-icon">🔐</span>
-              Xác nhận mật khẩu mới
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              className="form-input"
-              value={confirmPassword}
-              onChange={handleChange}
-              placeholder="Nhập lại mật khẩu mới"
-              disabled={loading}
-              autoComplete="new-password"
+              required
+              minLength={6}
             />
           </div>
 
           <div className="pass-popup-actions">
             <button
               type="button"
-              className="btn-cancel"
-              onClick={handleClose}
+              className="cancel-button"
+              onClick={onClose}
               disabled={loading}
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="btn-confirm"
+              className="confirm-button"
               disabled={loading}
             >
               {loading ? (

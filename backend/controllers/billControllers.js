@@ -195,7 +195,7 @@ export const getSpecificMonthRevenue = async (req, res) => {
     if (!year || !month) {
       return res.status(400).json({
         message:
-          "Please provide both year and month parameters (e.g., ?year=2025&month=12)",
+          "Please provide both year and month parameters (e.g., ?year=2026&month=12)",
       });
     }
 

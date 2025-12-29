@@ -1,148 +1,158 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import PassPopup from "../../components/passPopup/passPopup";
-import "./Profile.css";
-import profileFields from "./Profile.json";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import PassPopup from '../../components/passPopup/passPopup';
+import './Profile.css';
 
 const Profile = () => {
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-  
   const [userData, setUserData] = useState({
-    identification: "",
-    name: "",
-    phone: "",
-    address: "",
-    dob: "",
+    identification: '',
+    name: '',
+    phone: '',
+    address: '',
+    dob: '',
   });
-  
-  const [phone, setPhone] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showPassPopup, setShowPassPopup] = useState(false);
+  const [passChangeLoading, setPassChangeLoading] = useState(false);
+  const [passChangeError, setPassChangeError] = useState('');
 
-  // Lấy userID từ sessionStorage
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+  // Lấy thông tin người dùng khi component mount
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      const userId = sessionStorage.getItem("userID");
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const userId = sessionStorage.getItem('userID');
       
       if (!userId) {
-        setError("Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.");
+        setError('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+        setLoading(false);
         return;
       }
 
-      setLoading(true);
-      setError("");
-      
-      try {
-        const response = await axios.get(`${API_URL}/user/my-profile`, {
-          params: { userId },
+      const response = await axios.get(`${API_URL}/user/my-profile`, {
+        params: { userId }
+      });
+
+      if (response.data && response.data.user) {
+        const user = response.data.user;
+        setUserData({
+          identification: user.identification || '',
+          name: user.name || '',
+          phone: user.phone || '',
+          address: user.address || '',
+          dob: user.dob ? new Date(user.dob).toISOString().split('T')[0] : '',
         });
-
-        if (response.data && response.data.user) {
-          const user = response.data.user;
-          setUserData({
-            identification: user.identification || "",
-            name: user.name || "",
-            phone: user.phone || "",
-            address: user.address || "",
-            dob: user.dob ? new Date(user.dob).toISOString().split("T")[0] : "",
-          });
-          setPhone(user.phone || "");
-        }
-      } catch (err) {
-        const errorMessage =
-          err.response?.data?.message ||
-          "Không thể tải thông tin người dùng. Vui lòng thử lại.";
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchUserProfile();
-  }, [API_URL]);
-
-  // Xử lý cập nhật số điện thoại
-  const handleUpdatePhone = async (e) => {
-    e.preventDefault();
-    
-    if (phone === userData.phone) {
-      setSuccess("Không có thay đổi nào.");
-      setTimeout(() => setSuccess(""), 3000);
-      return;
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        'Không thể tải thông tin người dùng. Vui lòng thử lại.';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  const handlePhoneChange = (e) => {
+    setUserData({ ...userData, phone: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
     setSaving(true);
-    setError("");
-    setSuccess("");
 
     try {
       const response = await axios.patch(`${API_URL}/user/update-profile`, {
         identification: userData.identification,
-        phone: phone,
-      });
-
-      if (response.data && response.data.user) {
-        setUserData((prev) => ({
-          ...prev,
-          phone: response.data.user.phone,
-        }));
-        setSuccess("Cập nhật số điện thoại thành công!");
-        setTimeout(() => setSuccess(""), 3000);
-      }
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        "Không thể cập nhật thông tin. Vui lòng thử lại.";
-      setError(errorMessage);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Xử lý đổi mật khẩu
-  const handleChangePassword = async (passwordData) => {
-    setSaving(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const response = await axios.patch(`${API_URL}/user/update-profile`, {
-        identification: passwordData.identification,
-        currentPassword: passwordData.oldPassword,
-        newPassword: passwordData.newPassword,
+        phone: userData.phone,
       });
 
       if (response.data) {
-        setSuccess("Đổi mật khẩu thành công!");
-        setShowPassPopup(false);
-        setTimeout(() => setSuccess(""), 3000);
+        setSuccess('Cập nhật thông tin thành công!');
+        // Cập nhật lại dữ liệu từ server
+        await fetchUserProfile();
+        setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {
       const errorMessage =
         err.response?.data?.message ||
-        "Không thể đổi mật khẩu. Vui lòng thử lại.";
+        'Không thể cập nhật thông tin. Vui lòng thử lại.';
       setError(errorMessage);
-      throw err; // Re-throw để passPopup có thể xử lý
     } finally {
       setSaving(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN");
+  const handleOpenPassPopup = () => {
+    setShowPassPopup(true);
+  };
+
+  const handleClosePassPopup = () => {
+    setShowPassPopup(false);
+    setPassChangeError('');
+    setPassChangeLoading(false);
+  };
+
+  const handlePasswordChange = async (formData) => {
+    setPassChangeError('');
+    setPassChangeLoading(true);
+
+    // Validation
+    if (!formData.currentPassword || !formData.newPassword) {
+      setPassChangeError('Vui lòng nhập đầy đủ thông tin.');
+      setPassChangeLoading(false);
+      return;
+    }
+
+    if (formData.newPassword.length < 6) {
+      setPassChangeError('Mật khẩu mới phải có ít nhất 6 ký tự.');
+      setPassChangeLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.patch(`${API_URL}/user/update-profile`, {
+        identification: formData.identification,
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
+
+      if (response.data) {
+        setShowPassPopup(false);
+        setSuccess('Đổi mật khẩu thành công!');
+        setPassChangeError('');
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        'Không thể đổi mật khẩu. Vui lòng thử lại.';
+      setPassChangeError(errorMessage);
+    } finally {
+      setPassChangeLoading(false);
+    }
   };
 
   if (loading) {
     return (
       <div className="profile-page">
-        <div className="profile-loading">
-          <div className="loading-spinner"></div>
-          <p>Đang tải thông tin...</p>
+        <div className="profile-container">
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>Đang tải thông tin...</p>
+          </div>
         </div>
       </div>
     );
@@ -151,63 +161,103 @@ const Profile = () => {
   return (
     <div className="profile-page">
       <div className="profile-container">
-        <div className="profile-header">
-          <h1 className="profile-title">Thông tin cá nhân</h1>
-          <p className="profile-subtitle">Quản lý thông tin tài khoản của bạn</p>
-        </div>
-
-        {error && (
-          <div className="profile-error">
-            <span className="error-icon">⚠️</span>
-            <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="profile-success">
-            <span className="success-icon">✓</span>
-            <span>{success}</span>
-          </div>
-        )}
-
         <div className="profile-card">
-          <form onSubmit={handleUpdatePhone} className="profile-form">
-            {profileFields.fields.map((field) => (
-              <div key={field.name} className="form-group">
-                <label className="form-label">
-                  {field.label}
-                  {field.editable && <span className="required">*</span>}
-                </label>
-                {field.name === "phone" ? (
-                  <input
-                    type="text"
-                    className="form-input editable"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder={`Nhập ${field.label.toLowerCase()}`}
-                    disabled={saving}
-                  />
-                ) : (
-                  <input
-                    type={field.name === "dob" ? "date" : "text"}
-                    className="form-input readonly"
-                    value={
-                      field.name === "dob"
-                        ? userData.dob
-                        : userData[field.name] || ""
-                    }
-                    readOnly
-                    disabled
-                  />
-                )}
-              </div>
-            ))}
+          <div className="profile-header">
+            <h2 className="profile-title">Thông tin cá nhân</h2>
+            <p className="profile-subtitle">Quản lý thông tin tài khoản của bạn</p>
+          </div>
+
+          {error && (
+            <div className="profile-error">
+              <span className="error-icon">⚠️</span>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="profile-success">
+              <span className="success-icon">✓</span>
+              <span>{success}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="profile-form">
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">🆔</span>
+                CCCD / CMND
+              </label>
+              <input
+                className="form-input"
+                type="text"
+                value={userData.identification}
+                disabled
+                readOnly
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">👤</span>
+                Họ và tên
+              </label>
+              <input
+                className="form-input"
+                type="text"
+                value={userData.name}
+                disabled
+                readOnly
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">📱</span>
+                Số điện thoại
+              </label>
+              <input
+                className="form-input editable"
+                type="text"
+                value={userData.phone}
+                onChange={handlePhoneChange}
+                placeholder="Nhập số điện thoại"
+                disabled={saving}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">📍</span>
+                Địa chỉ
+              </label>
+              <input
+                className="form-input"
+                type="text"
+                value={userData.address || ''}
+                disabled
+                readOnly
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <span className="label-icon">📅</span>
+                Ngày sinh
+              </label>
+              <input
+                className="form-input"
+                type="date"
+                value={userData.dob}
+                disabled
+                readOnly
+              />
+            </div>
 
             <div className="form-actions">
               <button
                 type="submit"
-                className="btn-save"
-                disabled={saving || phone === userData.phone}
+                className="save-button"
+                disabled={saving}
               >
                 {saving ? (
                   <>
@@ -224,9 +274,8 @@ const Profile = () => {
 
               <button
                 type="button"
-                className="btn-change-password"
-                onClick={() => setShowPassPopup(true)}
-                disabled={saving}
+                className="change-password-button"
+                onClick={handleOpenPassPopup}
               >
                 <span className="button-icon">🔒</span>
                 Đổi mật khẩu
@@ -239,9 +288,11 @@ const Profile = () => {
       {showPassPopup && (
         <PassPopup
           identification={userData.identification}
-          onClose={() => setShowPassPopup(false)}
-          onSubmit={handleChangePassword}
-          loading={saving}
+          phone={userData.phone}
+          onClose={handleClosePassPopup}
+          onSubmit={handlePasswordChange}
+          loading={passChangeLoading}
+          error={passChangeError}
         />
       )}
     </div>
