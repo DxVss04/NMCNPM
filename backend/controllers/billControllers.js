@@ -185,3 +185,82 @@ export const updateBillItemStatus = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+5; // Thống kê chi tiết 1 tháng cụ thể
+export const getSpecificMonthRevenue = async (req, res) => {
+  try {
+    const { year, month } = req.query;
+
+    // Kiểm tra phải có cả year và month
+    if (!year || !month) {
+      return res.status(400).json({
+        message:
+          "Please provide both year and month parameters (e.g., ?year=2025&month=12)",
+      });
+    }
+
+    const yearNum = parseInt(year);
+    const monthNum = parseInt(month);
+
+    // Validate month (1-12)
+    if (monthNum < 1 || monthNum > 12) {
+      return res.status(400).json({
+        message: "Month must be between 1 and 12",
+      });
+    }
+
+    const result = await Bill.aggregate([
+      {
+        $unwind: "$billItem",
+      },
+      {
+        $match: {
+          "billItem.status": true, // Chỉ bill đã thanh toán
+          $expr: {
+            $and: [
+              { $eq: [{ $year: "$billItem.createdAt" }, yearNum] },
+              { $eq: [{ $month: "$billItem.createdAt" }, monthNum] },
+            ],
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$type",
+          totalAmount: { $sum: "$billItem.amount" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { totalAmount: -1 },
+      },
+    ]);
+
+    // Tính tổng chung
+    const grandTotal = result.reduce((sum, item) => sum + item.totalAmount, 0);
+    const totalBills = result.reduce((sum, item) => sum + item.count, 0);
+
+    // Format breakdown theo loại hóa đơn
+    const breakdown = result.map((item) => ({
+      type: item._id,
+      totalAmount: item.totalAmount,
+      count: item.count,
+    }));
+
+    res.status(200).json({
+      message: `Revenue for ${monthNum}/${yearNum} calculated successfully`,
+      period: {
+        year: yearNum,
+        month: monthNum,
+      },
+      summary: {
+        totalRevenue: grandTotal,
+        totalBills: totalBills,
+      },
+      breakdown: breakdown,
+    });
+  } catch (error) {
+    console.error("Get specific month revenue error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};

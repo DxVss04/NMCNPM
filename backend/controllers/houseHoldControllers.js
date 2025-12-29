@@ -277,3 +277,18 @@ export const handleHeadRemoval = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+//5. Thông kê số hộ gia đình
+
+export const getHouseHoldStatistics = async (req, res) => {
+  try {
+    const totalHouseholds = await HouseHold.countDocuments();
+
+    res.status(200).json({
+      message: "Total households retrieved successfully",
+      totalHouseholds: totalHouseholds,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

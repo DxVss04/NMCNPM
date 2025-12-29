@@ -470,3 +470,28 @@ URL: http://localhost:5000/api/house-hold/statistics
     "totalHouseholds": 6
 }
 ```
+
+## Tổng tiền đã thanh toán trong tháng
+
+```json
+URL:http://localhost:5000/api/bills/revenue/specific-month?year=2025&month=12
+
+- output:{
+    "message": "Revenue for 12/2025 calculated successfully",
+    "period": {
+        "year": 2025,
+        "month": 12
+    },
+    "summary": {
+        "totalRevenue": 150000,
+        "totalBills": 1
+    },
+    "breakdown": [
+        {
+            "type": "electricity",
+            "totalAmount": 150000,
+            "count": 1
+        }
+    ]
+}
+```

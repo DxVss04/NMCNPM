@@ -6,6 +6,7 @@ import {
   deleteHouseHold,
   removeMemberFromHouseHold,
   handleHeadRemoval,
+  getHouseHoldStatistics,
 } from "../controllers/houseHoldControllers.js";
 import express from "express";
 
@@ -23,7 +24,9 @@ router.get(
 );
 //2.Get all households (paginated)
 router.get("/all-households", getAllHouseHolds);
-//III. Delete household (only head of household allowed)
+//IIII. Delete household (only head of household allowed)
 router.delete("/delete-household", deleteHouseHold);
 router.delete("/handle-head-removal/:householdId", handleHeadRemoval);
+//V. Get household statistics
+router.get("/statistics", getHouseHoldStatistics);
 export default router;

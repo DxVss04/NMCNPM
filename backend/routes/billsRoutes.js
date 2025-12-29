@@ -4,6 +4,7 @@ import {
   getAllBillsByHousehold,
   getAllBills,
   updateBillItemStatus,
+  getSpecificMonthRevenue,
 } from "../controllers/billControllers.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get("/households/:identification_head/bills", getAllBillsByHousehold);
 router.post("/create-bill", createBill);
 router.get("/get-bills", getAllBills);
 router.patch("/update-bill-item/:billId/:billItemId", updateBillItemStatus);
+router.get("/revenue/specific-month", getSpecificMonthRevenue);
 
 export default router;
