@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { saveIdentification } from "../../components/localStorage/authStorage";
 import "./Login.css";
 
 const Login = () => {
@@ -16,8 +15,8 @@ const Login = () => {
 
   // Kiểm tra nếu đã đăng nhập thì redirect
   useEffect(() => {
-    const auth = sessionStorage.getItem("auth_identification");
-    if (auth) {
+    const isAuth = sessionStorage.getItem("isAuth");
+    if (isAuth) {
       navigate("/profile", { replace: true });
     }
   }, [navigate]);
@@ -43,19 +42,17 @@ const Login = () => {
       });
 
       if (response.data && response.data.user) {
-        // Lưu identification vào sessionStorage
-        const saved = saveIdentification(response.data.user.identification);
+        // Lưu userID vào sessionStorage
+       sessionStorage.setItem("isAuth", "true");
+       sessionStorage.setItem("userID", response.data.user.id);
         
-        if (saved) {
+      
           setToast("Đăng nhập thành công! Đang chuyển hướng...");
           
           // Chuyển hướng sau 1 giây
           setTimeout(() => {
             navigate("/profile", { replace: true });
           }, 1000);
-        } else {
-          setError("Không thể lưu thông tin đăng nhập. Vui lòng thử lại.");
-        }
       } else {
         setError("Đăng nhập thất bại. Vui lòng thử lại.");
       }

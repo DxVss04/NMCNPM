@@ -1,9 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { isAuthenticated } from "../localStorage/authStorage";
 
 export default function ProtectedRoute() {
-  // Kiểm tra authentication từ sessionStorage
-  if (!isAuthenticated()) {
+  const isAuth = sessionStorage.getItem("isAuth");
+
+  if (!isAuth) {
     return <Navigate to="/login" replace />;
   }
 
