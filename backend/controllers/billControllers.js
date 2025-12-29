@@ -264,3 +264,53 @@ export const getSpecificMonthRevenue = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// 6. Đếm số hộ có hóa đơn chưa thanh toán ít nhát 1 hóa đơn
+export const countHouseholdsWithUnpaidBills = async (req, res) => {
+  try {
+    const { year, month } = req.query;
+
+    let matchCondition = {
+      "billItem.status": false,
+    };
+
+    if (year && month) {
+      const yearNum = parseInt(year);
+      const monthNum = parseInt(month);
+
+      if (monthNum < 1 || monthNum > 12) {
+        return res.status(400).json({
+          message: "Month must be between 1 and 12",
+        });
+      }
+
+      matchCondition.$expr = {
+        $and: [
+          { $eq: [{ $year: "$billItem.createdAt" }, yearNum] },
+          { $eq: [{ $month: "$billItem.createdAt" }, monthNum] },
+        ],
+      };
+    }
+
+    const result = await Bill.aggregate([
+      { $unwind: "$billItem" },
+      { $match: matchCondition },
+      { $group: { _id: "$houseHold" } },
+      { $count: "totalHouseholds" },
+    ]);
+
+    const count = result[0]?.totalHouseholds || 0;
+
+    res.status(200).json({
+      message: "Count retrieved successfully",
+      period:
+        year && month
+          ? { year: parseInt(year), month: parseInt(month) }
+          : "All time",
+      totalHouseholdsWithUnpaidBills: count,
+    });
+  } catch (error) {
+    console.error("Count unpaid households error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};

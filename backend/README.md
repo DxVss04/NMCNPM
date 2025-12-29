@@ -495,3 +495,12 @@ URL:http://localhost:5000/api/bills/revenue/specific-month?year=2025&month=12
     ]
 }
 ```
+
+## Thống kê các hộ chưa nộp tiền theo tháng
+
+```json
+URL:http://localhost:5000/api/bills/count-unpaid-households?year=2025&month=12
+
+- output:
+{"message":"Count retrieved successfully","period":{"year":2025,"month":12},"totalHouseholdsWithUnpaidBills":2}
+```
