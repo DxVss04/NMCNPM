@@ -1,5 +1,6 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcrypt";
+import mongoose from "mongoose";
 
 // User cập nhật thông tin cá nhân
 export const updateUserProfile = async (req, res) => {
@@ -65,6 +66,44 @@ export const updateUserProfile = async (req, res) => {
         phone: updatedUser.phone,
         address: updatedUser.address,
         dob: updatedUser.dob,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// User lấy thông tin cá nhân
+
+// User xem thông tin của chính mình (đã login)
+// Lấy thông tin user qua body
+export const getMyProfile = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile retrieved successfully",
+      user: {
+        _id: user._id,
+        identification: user.identification,
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        dob: user.dob,
       },
     });
   } catch (error) {

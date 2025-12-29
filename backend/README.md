@@ -423,3 +423,37 @@ URL:http://localhost:5000/api/user/my-profile
     }
 }
 ```
+
+## update trạng thái hóa đơn
+
+```json
+URL:http://localhost:5000/api/bills/update-bill-item/694e92b2ccf70a2ab8fb5e32/694e92b2ccf70a2ab8fb5e33
+
+- input:{
+  "status": true
+  }
+
+- output:
+{
+    "message": "Bill item status updated successfully",
+    "bill": {
+        "_id": "694e92b2ccf70a2ab8fb5e32",
+        "houseHold": null,
+        "type": "electricity",
+        "billItem": [
+            {
+                "oldIndex": 100,
+                "newIndex": 150,
+                "unitPrice": 3000,
+                "amount": 150000,
+                "dueDate": "2025-12-31T00:00:00.000Z",
+                "status": true,
+                "paidAt": "2025-12-29T01:38:21.378Z",
+                "_id": "694e92b2ccf70a2ab8fb5e33",
+                "createdAt": "2025-12-26T13:50:42.928Z"
+            }
+        ],
+        "__v": 0
+    }
+}
+```

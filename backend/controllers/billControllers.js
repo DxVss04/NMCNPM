@@ -1,5 +1,6 @@
 import HouseHold from "../models/houseHoldModel.js";
 import Bill from "../models/bill.js";
+import mongoose from "mongoose";
 
 const ELECTRIC_UNIT_PRICE = 3000;
 const WATER_UNIT_PRICE = 15000;
@@ -115,6 +116,72 @@ export const getAllBills = async (req, res) => {
     });
   } catch (error) {
     console.error("Get all bills error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 4. Update trạng thái của bill item
+
+export const updateBillItemStatus = async (req, res) => {
+  try {
+    const { billId, billItemId } = req.params;
+    const { status } = req.body;
+
+    // Kiểm tra billId có hợp lệ không
+    if (!mongoose.Types.ObjectId.isValid(billId)) {
+      return res.status(400).json({ message: "Invalid bill ID format" });
+    }
+
+    // Kiểm tra billItemId có hợp lệ không
+    if (!mongoose.Types.ObjectId.isValid(billItemId)) {
+      return res.status(400).json({ message: "Invalid bill item ID format" });
+    }
+
+    // Kiểm tra status phải là boolean
+    if (typeof status !== "boolean") {
+      return res.status(400).json({
+        message: "Status must be true (paid) or false (unpaid)",
+      });
+    }
+
+    // Tìm bill
+    const bill = await Bill.findById(billId);
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found" });
+    }
+
+    // Tìm bill item trong mảng billItem
+    const billItem = bill.billItem.id(billItemId);
+    if (!billItem) {
+      return res.status(404).json({ message: "Bill item not found" });
+    }
+
+    // Cập nhật status
+    billItem.status = status;
+
+    // Nếu thanh toán (status = true), lưu ngày thanh toán
+    if (status === true) {
+      billItem.paidAt = new Date();
+    } else {
+      // Nếu đổi lại thành chưa thanh toán, xóa ngày thanh toán
+      billItem.paidAt = null;
+    }
+
+    // Lưu lại bill
+    await bill.save();
+
+    // Populate household info
+    await bill.populate(
+      "houseHold",
+      "namehousehold identification_head address"
+    );
+
+    res.status(200).json({
+      message: "Bill item status updated successfully",
+      bill: bill,
+    });
+  } catch (error) {
+    console.error("Update bill item status error:", error);
     res.status(500).json({ message: error.message });
   }
 };
