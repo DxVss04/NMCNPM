@@ -8,10 +8,24 @@ import {
   deleteAllPosts,
 } from "../controllers/postControllers.js";
 import express from "express";
+import { upload } from "../config/multerConfig.js";
 const router = express.Router();
 
 //I.Create post
-router.post("/create-post", createPost);
+router.post("/posts", (req, res) => {
+  upload(req, res, (err) => {
+    if (err) {
+      // Lỗi từ Multer
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ message: "File quá lớn, tối đa 5MB" });
+      }
+      return res
+        .status(400)
+        .json({ message: "Lỗi upload", error: err.message });
+    }
+    createPost(req, res);
+  });
+});
 //II.Read posts
 //1.---Xem tat ca bai viet
 router.get("/posts", getAllPosts);

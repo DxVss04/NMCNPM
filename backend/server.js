@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import connectDB from "./config/connectDB.js";
 import houseHoldRoutes from "./routes/houseHoldRoutes.js";
 import billRoutes from "./routes/billsRoutes.js";
@@ -14,10 +16,14 @@ connectDB();
 
 const app = express();
 const PORT = 5000;
+// Get __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static("uploads"));
 
 app.get("/", (req, res) => {
   res.send("api working!");
