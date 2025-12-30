@@ -4,6 +4,18 @@ import './postItem.css';
 const PostItem = ({ post, onDelete, onTogglePin, onUpdate }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const API_URL = import.meta.env.VITE_API_URL || '';
+
+  // Get full image URL
+  const getImageUrl = () => {
+    if (!post.imageUrl) return null;
+    // If it's already a full URL, return as is
+    if (post.imageUrl.startsWith('http')) {
+      return post.imageUrl;
+    }
+    // Otherwise, prepend API_URL
+    return `${API_URL}${post.imageUrl}`;
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -89,7 +101,9 @@ const PostItem = ({ post, onDelete, onTogglePin, onUpdate }) => {
         </div>
       </div>
 
-      <img src={post.imageUrl} alt={post.title} className="post-image" />
+      {getImageUrl() && (
+        <img src={getImageUrl()} alt={post.title} className="post-image" />
+      )}
 
       <div className="post-body">
         <h3 className="post-title">{post.title}</h3>

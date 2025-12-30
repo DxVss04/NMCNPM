@@ -1,10 +1,10 @@
 {
-  "title": "Thông báo: Bảo trì hệ thống thang máy tòa nhà A",
-  "content": "Ban quản lý thông báo sẽ tạm dừng hoạt động thang máy số 2 từ 14:00 đến 16:00 ngày hôm nay để kiểm tra định kỳ. Mong cư dân thông cảm.",
-  "imageUrl": "https://picsum.photos/800/400",
+  "title": "Bài viết về Node.js",
+  "content": "Hướng dẫn upload file với Multer",
+  "imageUrl": "/uploads/images/1767054181352-651813545.jpg",
   "isPinned": true,
-  "_id": "694f503217a4af0775bcaae4",
-  "createdAt": "2025-12-27T03:19:14.721Z",
-  "updatedAt": "2025-12-27T03:19:14.721Z",
-  "__v": 0
-}
+  "\_id": "69531b65f4a31106efcdf672",
+  "createdAt": "2025-12-30T00:23:01.645Z",
+  "updatedAt": "2025-12-30T00:23:01.645Z",
+  "\_\_v": 0
+  }

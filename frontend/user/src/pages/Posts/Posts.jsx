@@ -3,6 +3,8 @@ import axios from 'axios';
 import PostItem from '../../components/PostItem/PostItem';
 import './Posts.css';
 
+
+
 const Posts = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,6 +24,7 @@ const Posts = () => {
       const response = await axios.get(`${API_URL}/posts/posts`, {
         params: {
           page: pageNum,
+          limit: POSTS_PER_PAGE
         }
       });
 
@@ -115,5 +118,7 @@ const Posts = () => {
     </div>
   );
 };
-
+<div>
+  <p>"tooi"</p>
+</div>
 export default Posts;

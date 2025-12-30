@@ -16,7 +16,7 @@ export default function App() {
       {/* Protected system - Chỉ truy cập được sau khi login */}
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<Navigate to="/profile" replace />} />
+          <Route index element={<Navigate to="/profile" replace/>} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/bills" element={<Bills />} />
           <Route path="/posts" element={<Posts />} />

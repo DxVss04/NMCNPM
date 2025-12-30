@@ -133,15 +133,46 @@ const Posts = () => {
 
   const handleSavePost = async (postData) => {
     try {
+      const formData = new FormData();
+      formData.append('title', postData.title);
+      formData.append('content', postData.content);
+      formData.append('isPinned', postData.isPinned);
+      
+      // If there's a new file, append it
+      if (postData.file) {
+        formData.append('image', postData.file);
+      } else {
+        // If no file, append imageUrl (could be empty string if removed)
+        formData.append('imageUrl', postData.imageUrl || '');
+      }
+
       if (editingPost) {
         // Update existing post
-        await axios.patch(`${API_URL}/posts/posts/update/${editingPost._id}`, postData);
+        const response = await axios.patch(
+          `${API_URL}/posts/posts/update/${editingPost._id}`, 
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+        
+        const updatedPost = response.data.post || response.data;
         setPosts(prev => prev.map(p => 
-          p._id === editingPost._id ? { ...p, ...postData } : p
+          p._id === editingPost._id ? updatedPost : p
         ));
       } else {
         // Create new post
-        const response = await axios.post(`${API_URL}/posts/create-post`, postData);
+        const response = await axios.post(
+          `${API_URL}/posts/posts`, 
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
         const newPost = response.data.post || response.data;
         // Refresh posts list to show the new post
         setPage(1);
