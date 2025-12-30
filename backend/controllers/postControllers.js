@@ -4,14 +4,17 @@ import Post from "../models/post.js";
 
 export const createPost = async (req, res) => {
   try {
-    const { title, content, imageUrl, isPinned } = req.body;
+    const { title, content, isPinned } = req.body;
+
+    // Lấy đường dẫn ảnh từ file upload
+    const imageUrl = req.file ? `/uploads/images/${req.file.filename}` : null;
+
     const newPost = new Post({ title, content, imageUrl, isPinned });
     await newPost.save();
+
     res.status(201).json(newPost);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Server error while creating a post", error });
+    res.status(500).json({ message: "Server error", error });
   }
 };
 

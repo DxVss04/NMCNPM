@@ -504,3 +504,42 @@ URL:http://localhost:5000/api/bills/count-unpaid-households?year=2025&month=12
 - output:
 {"message":"Count retrieved successfully","period":{"year":2025,"month":12},"totalHouseholdsWithUnpaidBills":2}
 ```
+
+/_
+curl -X POST http://localhost:5000/api/posts/posts \
+ -F "title=Test bài viết" \
+ -F "content=Nội dung test upload ảnh với Multer" \
+ -F "isPinned=false" \
+ -F "![alt text](478458551_1154089796351860_8528934147318576681_n.jpg)"
+_/ (này không quan trọng lắm đâu,đừng động vào)
+
+## Post kèm ảnh upload từ admin
+
+```json
+URL:http://localhost:5000/api/posts/posts
+
+- install thư viện: npm install multer
+- input: tại postman chọn body-> from-data
+  điền: ### Body (form-data)
+
+| Key      | Type | Value                                      |
+| -------- | ---- | ------------------------------------------ |
+| title    | Text | Bài viết về Node.js                        |
+| content  | Text | Hướng dẫn upload file với Multer           |
+| isPinned | Text | true                                       |
+| image    | File | (Chọn file ảnh từ máy, ví dụ: \*.jpg/.png) |
+
+- output:
+  {
+  "title": "Bài viết về Node.js",
+  "content": "Hướng dẫn upload file với Multer",
+  "imageUrl": "/uploads/images/1767054181352-651813545.jpg",
+  "isPinned": true,
+  "\_id": "69531b65f4a31106efcdf672",
+  "createdAt": "2025-12-30T00:23:01.645Z",
+  "updatedAt": "2025-12-30T00:23:01.645Z",
+  "\_\_v": 0
+  }
+
+- test xem ảnh :http://localhost:5000/uploads/images/1767054181352-651813545.jpg
+```
