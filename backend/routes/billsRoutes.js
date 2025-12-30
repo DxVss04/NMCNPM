@@ -6,13 +6,14 @@ import {
   updateBillItemStatus,
   getSpecificMonthRevenue,
   countHouseholdsWithUnpaidBills,
+  getBillsByHouseholdId,
 } from "../controllers/billControllers.js";
 
 const router = express.Router();
 
 // User route
 router.get("/households/:identification_head/bills", getAllBillsByHousehold);
-
+router.get("/user/:householdId/bills", getBillsByHouseholdId);
 // Admin routes
 router.post("/create-bill", createBill);
 router.get("/get-bills", getAllBills);

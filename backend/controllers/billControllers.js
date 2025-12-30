@@ -74,7 +74,7 @@ export const createBill = async (req, res) => {
   }
 };
 
-// 2. User xem tất cả hóa đơn của nhà mình
+// 2. household xem tất cả hóa đơn của nhà mình
 export const getAllBillsByHousehold = async (req, res) => {
   try {
     const { identification_head } = req.params;
@@ -311,6 +311,39 @@ export const countHouseholdsWithUnpaidBills = async (req, res) => {
     });
   } catch (error) {
     console.error("Count unpaid households error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//7. User xem hóa đơn bằng householdId
+export const getBillsByHouseholdId = async (req, res) => {
+  try {
+    const { householdId } = req.params;
+
+    // Kiểm tra household có tồn tại không
+    const household = await HouseHold.findById(householdId);
+    if (!household) {
+      return res.status(404).json({ message: "Household not found" });
+    }
+
+    // Lấy tất cả hóa đơn của household
+    const bills = await Bill.find({ houseHold: householdId })
+      .populate("houseHold", "namehousehold identification_head address")
+      .sort({ "billItem.createdAt": -1 });
+
+    res.status(200).json({
+      message: "Bills retrieved successfully",
+      household: {
+        id: household._id,
+        name: household.namehousehold,
+        address: household.address,
+        namehead: household.namehead,
+      },
+      total: bills.length,
+      bills,
+    });
+  } catch (error) {
+    console.error("Get bills error:", error);
     res.status(500).json({ message: error.message });
   }
 };

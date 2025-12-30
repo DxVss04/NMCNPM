@@ -13,7 +13,7 @@ export const login = async (req, res) => {
     }
 
     // 2. Tìm user theo identification
-    const user = await User.findOne({ identification });
+    const user = await User.findOne({ identification }).populate("householdId");
 
     if (!user) {
       return res.status(404).json({
@@ -37,6 +37,14 @@ export const login = async (req, res) => {
         id: user._id,
         identification: user.identification,
         name: user.name,
+        householdId: user.householdId?._id || null, // THÊM dòng này
+        household: user.householdId
+          ? {
+              // THÊM block này
+              name: user.householdId.namehousehold,
+              address: user.householdId.address,
+            }
+          : null,
       },
     });
   } catch (error) {

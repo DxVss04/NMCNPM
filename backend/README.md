@@ -543,3 +543,21 @@ URL:http://localhost:5000/api/posts/posts
 
 - test xem ảnh :http://localhost:5000/uploads/images/1767054181352-651813545.jpg
 ```
+
+## User đọc thông tin hóa đon của nhà
+
+```json
+URL:http://localhost:5000/api/bills/user/694ea34af0c22a1507083dce/bills
+Phương thức GET kiểu req.params
+output:{
+"message": "Bills retrieved successfully",
+"household": {
+"id": "694ea34af0c22a1507083dce",
+"name": "Chung cu A - Tang 5 - Phong 101",
+"address": "Số 12, Nguyễn Trãi, Thanh Xuân, Hà Nội",
+"namehead": "Pham Van D"
+},
+"total": 0,
+"bills": []
+}
+```

@@ -6,6 +6,11 @@ const userSchema = mongoose.Schema({
     required: true,
     unique: true,
   },
+  householdId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "HouseHold",
+    required: false,
+  },
   name: {
     type: String,
     required: true,
