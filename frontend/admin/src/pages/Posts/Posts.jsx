@@ -137,17 +137,16 @@ const Posts = () => {
       formData.append('title', postData.title);
       formData.append('content', postData.content);
       formData.append('isPinned', postData.isPinned);
-      
-      // If there's a new file, append it
-      if (postData.file) {
-        formData.append('image', postData.file);
-      } else {
-        // If no file, append imageUrl (could be empty string if removed)
-        formData.append('imageUrl', postData.imageUrl || '');
-      }
 
       if (editingPost) {
         // Update existing post
+        // If there's a new file, append it; otherwise keep existing imageUrl
+        if (postData.file) {
+          formData.append('image', postData.file);
+        } else if (postData.imageUrl) {
+          formData.append('imageUrl', postData.imageUrl);
+        }
+        
         const response = await axios.patch(
           `${API_URL}/posts/posts/update/${editingPost._id}`, 
           formData,
@@ -158,12 +157,16 @@ const Posts = () => {
           }
         );
         
-        const updatedPost = response.data.post || response.data;
+        const updatedPost = response.data;
         setPosts(prev => prev.map(p => 
-          p._id === editingPost._id ? updatedPost : p
+          p._id === editingPost._id ? { ...p, ...updatedPost } : p
         ));
       } else {
         // Create new post
+        if (postData.file) {
+          formData.append('image', postData.file);
+        }
+        
         const response = await axios.post(
           `${API_URL}/posts/posts`, 
           formData,
@@ -173,6 +176,7 @@ const Posts = () => {
             }
           }
         );
+        
         const newPost = response.data.post || response.data;
         // Refresh posts list to show the new post
         setPage(1);
@@ -181,9 +185,10 @@ const Posts = () => {
       handleClosePopup();
     } catch (error) {
       console.error('Error saving post:', error);
+      const errorMessage = error.response?.data?.message || error.message;
       alert(editingPost 
-        ? 'Không thể cập nhật bài viết. Vui lòng thử lại.' 
-        : 'Không thể tạo bài viết. Vui lòng thử lại.');
+        ? `Không thể cập nhật bài viết: ${errorMessage}` 
+        : `Không thể tạo bài viết: ${errorMessage}`);
     }
   };
 

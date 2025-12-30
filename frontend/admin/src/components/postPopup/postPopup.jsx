@@ -10,10 +10,12 @@ const PostPopup = ({ post, onClose, onSave }) => {
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [fileError, setFileError] = useState('');
   const fileInputRef = useRef(null);
-  const API_URL = import.meta.env.VITE_API_URL || '';
 
   const isEditMode = !!post;
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 
   useEffect(() => {
     if (post) {
@@ -23,15 +25,8 @@ const PostPopup = ({ post, onClose, onSave }) => {
         imageUrl: post.imageUrl || '',
         isPinned: post.isPinned || false
       });
-      // Set preview for existing image
-      if (post.imageUrl) {
-        const imageUrl = post.imageUrl.startsWith('http') 
-          ? post.imageUrl 
-          : `${API_URL}${post.imageUrl}`;
-        setImagePreview(imageUrl);
-      } else {
-        setImagePreview(null);
-      }
+      setImagePreview(post.imageUrl || null);
+      setSelectedFile(null);
     } else {
       // Reset form for new post
       setFormData({
@@ -43,7 +38,8 @@ const PostPopup = ({ post, onClose, onSave }) => {
       setImagePreview(null);
       setSelectedFile(null);
     }
-  }, [post, API_URL]);
+    setFileError('');
+  }, [post]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -55,38 +51,53 @@ const PostPopup = ({ post, onClose, onSave }) => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        alert('Vui lòng chọn file ảnh (jpg, png, etc.)');
-        return;
-      }
-      
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Kích thước file không được vượt quá 5MB');
-        return;
-      }
+    setFileError('');
 
-      setSelectedFile(file);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) {
+      setSelectedFile(null);
+      setImagePreview(null);
+      return;
     }
+
+    // Validate file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setFileError('Chỉ chấp nhận file ảnh định dạng JPG, JPEG hoặc PNG');
+      setSelectedFile(null);
+      setImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setFileError('Kích thước file quá lớn. Tối đa 5MB');
+      setSelectedFile(null);
+      setImagePreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    setSelectedFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRemoveImage = () => {
     setSelectedFile(null);
-    setImagePreview(null);
+    setImagePreview(isEditMode && post?.imageUrl ? post.imageUrl : null);
+    setFileError('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    // Clear imageUrl when removing image
-    setFormData(prev => ({ ...prev, imageUrl: '' }));
   };
 
   const handleSubmit = (e) => {
@@ -96,6 +107,11 @@ const PostPopup = ({ post, onClose, onSave }) => {
       return;
     }
     
+    if (fileError) {
+      alert(fileError);
+      return;
+    }
+
     // Pass both formData and selectedFile to parent
     onSave({
       ...formData,
@@ -147,30 +163,36 @@ const PostPopup = ({ post, onClose, onSave }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="imageFile">Hình ảnh</label>
-            <input
-              type="file"
-              id="imageFile"
-              name="imageFile"
-              ref={fileInputRef}
-              accept="image/*"
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
+            <label htmlFor="image">Hình ảnh</label>
             <div className="file-upload-container">
-              <button
-                type="button"
-                className="btn-choose-file"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {selectedFile ? 'Chọn ảnh khác' : imagePreview ? 'Thay đổi ảnh' : 'Chọn file ảnh từ máy, ví dụ: *.jpg/.png'}
-              </button>
+              <input
+                type="file"
+                id="image"
+                name="image"
+                ref={fileInputRef}
+                accept="image/jpeg,image/jpg,image/png"
+                onChange={handleFileChange}
+                className="file-input"
+              />
+              <label htmlFor="image" className="file-input-label">
+                <span className="file-input-icon">📷</span>
+                <span className="file-input-text">
+                  {selectedFile ? selectedFile.name : 'Chọn file ảnh từ máy (JPG, PNG - tối đa 5MB)'}
+                </span>
+              </label>
+              {fileError && (
+                <p className="file-error">{fileError}</p>
+              )}
               {imagePreview && (
                 <div className="image-preview-container">
-                  <img src={imagePreview} alt="Preview" className="image-preview" />
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="image-preview"
+                  />
                   <button
                     type="button"
-                    className="btn-remove-image"
+                    className="remove-image-btn"
                     onClick={handleRemoveImage}
                     title="Xóa ảnh"
                   >
