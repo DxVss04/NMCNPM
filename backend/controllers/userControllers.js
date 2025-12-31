@@ -104,6 +104,7 @@ export const getMyProfile = async (req, res) => {
         phone: user.phone,
         address: user.address,
         dob: user.dob,
+        household: user.household,
       },
     });
   } catch (error) {
