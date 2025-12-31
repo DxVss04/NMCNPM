@@ -73,7 +73,10 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-// Lấy thông tin user qua query params
+// User lấy thông tin cá nhân
+
+// User xem thông tin của chính mình (đã login)
+// Lấy thông tin user qua body
 export const getMyProfile = async (req, res) => {
   try {
     const { userId } = req.query;

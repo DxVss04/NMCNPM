@@ -1,25 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import PassPopup from '../../components/passPopup/passPopup';
-import './Profile.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import PassPopup from "../../components/passPopup/passPopup";
+import "./Profile.css";
 
-const Profile = () => {
+export default function Profile() {
   const [userData, setUserData] = useState({
-    identification: '',
-    name: '',
-    phone: '',
-    address: '',
-    dob: '',
+    identification: "",
+    name: "",
+    phone: "",
+    address: "",
+    dob: "",
   });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [toast, setToast] = useState("");
   const [showPassPopup, setShowPassPopup] = useState(false);
-  const [passChangeLoading, setPassChangeLoading] = useState(false);
-  const [passChangeError, setPassChangeError] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
   // Lấy thông tin người dùng khi component mount
   useEffect(() => {
@@ -28,35 +26,31 @@ const Profile = () => {
 
   const fetchUserProfile = async () => {
     try {
-      setLoading(true);
-      setError('');
-      
-      const userId = sessionStorage.getItem('userID');
-      
+      const userId = sessionStorage.getItem("userId");
       if (!userId) {
-        setError('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
-        setLoading(false);
+        setError("Không tìm thấy thông tin đăng nhập");
         return;
       }
 
+      setLoading(true);
       const response = await axios.get(`${API_URL}/user/my-profile`, {
-        params: { userId }
+        params: { userId },
       });
 
       if (response.data && response.data.user) {
         const user = response.data.user;
         setUserData({
-          identification: user.identification || '',
-          name: user.name || '',
-          phone: user.phone || '',
-          address: user.address || '',
-          dob: user.dob ? new Date(user.dob).toISOString().split('T')[0] : '',
+          identification: user.identification || "",
+          name: user.name || "",
+          phone: user.phone || "",
+          address: user.address || "",
+          dob: user.dob ? new Date(user.dob).toLocaleDateString("vi-VN") : "",
         });
+        setPhone(user.phone || "");
       }
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message ||
-        'Không thể tải thông tin người dùng. Vui lòng thử lại.';
+        err.response?.data?.message || "Không thể tải thông tin người dùng";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -64,34 +58,42 @@ const Profile = () => {
   };
 
   const handlePhoneChange = (e) => {
-    setUserData({ ...userData, phone: e.target.value });
+    setPhone(e.target.value);
   };
 
-  const handleSubmit = async (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-    setSaving(true);
+    setError("");
+    setToast("");
+    setLoading(true);
 
     try {
+      const userId = sessionStorage.getItem("userId");
+      if (!userId) {
+        setError("Không tìm thấy thông tin đăng nhập");
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.patch(`${API_URL}/user/update-profile`, {
-        identification: userData.identification,
-        phone: userData.phone,
+        userId,
+        phone,
       });
 
-      if (response.data) {
-        setSuccess('Cập nhật thông tin thành công!');
-        // Cập nhật lại dữ liệu từ server
-        await fetchUserProfile();
-        setTimeout(() => setSuccess(''), 3000);
+      if (response.data && response.data.user) {
+        setUserData((prev) => ({
+          ...prev,
+          phone: response.data.user.phone,
+        }));
+        setToast("Cập nhật thông tin thành công!");
+        setTimeout(() => setToast(""), 3000);
       }
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message ||
-        'Không thể cập nhật thông tin. Vui lòng thử lại.';
+        err.response?.data?.message || "Cập nhật thông tin thất bại";
       setError(errorMessage);
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
@@ -101,62 +103,7 @@ const Profile = () => {
 
   const handleClosePassPopup = () => {
     setShowPassPopup(false);
-    setPassChangeError('');
-    setPassChangeLoading(false);
   };
-
-  const handlePasswordChange = async (formData) => {
-    setPassChangeError('');
-    setPassChangeLoading(true);
-
-    // Validation
-    if (!formData.currentPassword || !formData.newPassword) {
-      setPassChangeError('Vui lòng nhập đầy đủ thông tin.');
-      setPassChangeLoading(false);
-      return;
-    }
-
-    if (formData.newPassword.length < 6) {
-      setPassChangeError('Mật khẩu mới phải có ít nhất 6 ký tự.');
-      setPassChangeLoading(false);
-      return;
-    }
-
-    try {
-      const response = await axios.patch(`${API_URL}/user/update-profile`, {
-        identification: formData.identification,
-        currentPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
-      });
-
-      if (response.data) {
-        setShowPassPopup(false);
-        setSuccess('Đổi mật khẩu thành công!');
-        setPassChangeError('');
-        setTimeout(() => setSuccess(''), 3000);
-      }
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        'Không thể đổi mật khẩu. Vui lòng thử lại.';
-      setPassChangeError(errorMessage);
-    } finally {
-      setPassChangeLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="profile-page">
-        <div className="profile-container">
-          <div className="loading-spinner">
-            <div className="spinner"></div>
-            <p>Đang tải thông tin...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="profile-page">
@@ -174,129 +121,135 @@ const Profile = () => {
             </div>
           )}
 
-          {success && (
-            <div className="profile-success">
-              <span className="success-icon">✓</span>
-              <span>{success}</span>
+          {toast && (
+            <div className="profile-toast">
+              <span className="toast-icon">✓</span>
+              <span>{toast}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="profile-form">
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">🆔</span>
-                CCCD / CMND
-              </label>
-              <input
-                className="form-input"
-                type="text"
-                value={userData.identification}
-                disabled
-                readOnly
-              />
+          {loading && !userData.identification ? (
+            <div className="profile-loading">
+              <span className="loading-spinner">⏳</span>
+              <span>Đang tải thông tin...</span>
             </div>
+          ) : (
+            <form onSubmit={handleUpdateProfile} className="profile-form">
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">🆔</span>
+                  CCCD / CMND
+                </label>
+                <input
+                  className="form-input form-input-disabled"
+                  type="text"
+                  value={userData.identification}
+                  disabled
+                  readOnly
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">👤</span>
-                Họ và tên
-              </label>
-              <input
-                className="form-input"
-                type="text"
-                value={userData.name}
-                disabled
-                readOnly
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">👤</span>
+                  Họ và tên
+                </label>
+                <input
+                  className="form-input form-input-disabled"
+                  type="text"
+                  value={userData.name}
+                  disabled
+                  readOnly
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">📱</span>
-                Số điện thoại
-              </label>
-              <input
-                className="form-input editable"
-                type="text"
-                value={userData.phone}
-                onChange={handlePhoneChange}
-                placeholder="Nhập số điện thoại"
-                disabled={saving}
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">📞</span>
+                  Số điện thoại
+                </label>
+                <input
+                  className="form-input"
+                  type="text"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  placeholder="Nhập số điện thoại"
+                  disabled={loading}
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">📍</span>
-                Địa chỉ
-              </label>
-              <input
-                className="form-input"
-                type="text"
-                value={userData.address || ''}
-                disabled
-                readOnly
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">📍</span>
+                  Địa chỉ
+                </label>
+                <input
+                  className="form-input form-input-disabled"
+                  type="text"
+                  value={userData.address}
+                  disabled
+                  readOnly
+                />
+              </div>
 
-            <div className="form-group">
-              <label className="form-label">
-                <span className="label-icon">📅</span>
-                Ngày sinh
-              </label>
-              <input
-                className="form-input"
-                type="date"
-                value={userData.dob}
-                disabled
-                readOnly
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">
+                  <span className="label-icon">📅</span>
+                  Ngày sinh
+                </label>
+                <input
+                  className="form-input form-input-disabled"
+                  type="text"
+                  value={userData.dob}
+                  disabled
+                  readOnly
+                />
+              </div>
 
-            <div className="form-actions">
-              <button
-                type="submit"
-                className="save-button"
-                disabled={saving}
-              >
-                {saving ? (
-                  <>
-                    <span className="button-spinner">⏳</span>
-                    Đang lưu...
-                  </>
-                ) : (
-                  <>
-                    <span className="button-icon">💾</span>
-                    Lưu thay đổi
-                  </>
-                )}
-              </button>
+              <div className="form-actions">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="button-spinner">⏳</span>
+                      Đang cập nhật...
+                    </>
+                  ) : (
+                    <>
+                      <span className="button-icon">💾</span>
+                      Lưu thay đổi
+                    </>
+                  )}
+                </button>
 
-              <button
-                type="button"
-                className="change-password-button"
-                onClick={handleOpenPassPopup}
-              >
-                <span className="button-icon">🔒</span>
-                Đổi mật khẩu
-              </button>
-            </div>
-          </form>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleOpenPassPopup}
+                  disabled={loading}
+                >
+                  <span className="button-icon">🔒</span>
+                  Đổi mật khẩu
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
 
       {showPassPopup && (
         <PassPopup
-          identification={userData.identification}
-          phone={userData.phone}
           onClose={handleClosePassPopup}
-          onSubmit={handlePasswordChange}
-          loading={passChangeLoading}
-          error={passChangeError}
+          onSuccess={() => {
+            setShowPassPopup(false);
+            setToast("Đổi mật khẩu thành công!");
+            setTimeout(() => setToast(""), 3000);
+          }}
         />
       )}
     </div>
   );
-};
-
-export default Profile;
+}

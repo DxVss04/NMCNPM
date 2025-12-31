@@ -96,6 +96,7 @@ const MemberPopup = ({ member, onClose, onSave }) => {
               required
             >
               <option value="">Chọn quan hệ</option>
+              <option value="chuho">Chủ hộ</option>
               <option value="vo">Vợ</option>
               <option value="chong">Chồng</option>
               <option value="con">Con</option>

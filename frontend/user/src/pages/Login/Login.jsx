@@ -42,17 +42,16 @@ const Login = () => {
       });
 
       if (response.data && response.data.user) {
-        // Lưu userID vào sessionStorage
-       sessionStorage.setItem("isAuth", "true");
-       sessionStorage.setItem("userID", response.data.user.id);
+        // Lưu thông tin vào sessionStorage
+        sessionStorage.setItem("isAuth", "true");
+        sessionStorage.setItem("userId", response.data.user.id.toString());
         
-      
-          setToast("Đăng nhập thành công! Đang chuyển hướng...");
-          
-          // Chuyển hướng sau 1 giây
-          setTimeout(() => {
-            navigate("/profile", { replace: true });
-          }, 1000);
+        setToast("Đăng nhập thành công! Đang chuyển hướng...");
+        
+        // Chuyển hướng sau 1 giây
+        setTimeout(() => {
+          navigate("/profile", { replace: true });
+        }, 1000);
       } else {
         setError("Đăng nhập thất bại. Vui lòng thử lại.");
       }

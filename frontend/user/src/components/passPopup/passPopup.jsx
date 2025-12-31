@@ -1,53 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import './passPopup.css';
+import React, { useState } from "react";
+import axios from "axios";
+import "./passPopup.css";
 
-const PassPopup = ({ identification, phone, onClose, onSubmit, loading, error }) => {
-  const [formData, setFormData] = useState({
-    identification: identification || '',
-    phone: phone || '',
-    currentPassword: '',
-    newPassword: '',
-  });
-  const [localError, setLocalError] = useState('');
+const PassPopup = ({ onClose, onSuccess }) => {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Cập nhật formData khi props thay đổi
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      identification: identification || '',
-      phone: phone || '',
-    }));
-  }, [identification, phone]);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-  // Reset local error when form data changes
-  useEffect(() => {
-    if (localError) {
-      setLocalError('');
-    }
-  }, [formData.currentPassword, formData.newPassword]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError('');
-    
+    setError("");
+
     // Validation
-    if (!formData.currentPassword || !formData.newPassword) {
-      setLocalError('Vui lòng nhập đầy đủ thông tin.');
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setError("Vui lòng nhập đầy đủ thông tin");
       return;
     }
 
-    if (formData.newPassword.length < 6) {
-      setLocalError('Mật khẩu mới phải có ít nhất 6 ký tự.');
+    if (newPassword !== confirmPassword) {
+      setError("Mật khẩu mới và xác nhận mật khẩu không khớp");
       return;
     }
 
-    // Gọi callback từ parent component
-    onSubmit(formData);
+    if (newPassword.length < 6) {
+      setError("Mật khẩu mới phải có ít nhất 6 ký tự");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const identification = sessionStorage.getItem("identification");
+      if (!identification) {
+        setError("Không tìm thấy thông tin đăng nhập");
+        setLoading(false);
+        return;
+      }
+
+      const response = await axios.patch(`${API_URL}/user/update-profile`, {
+        identification,
+        currentPassword,
+        newPassword,
+      });
+
+      if (response.data) {
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        onSuccess();
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Đổi mật khẩu thất bại";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,83 +72,66 @@ const PassPopup = ({ identification, phone, onClose, onSubmit, loading, error })
           </button>
         </div>
 
-        {(error || localError) && (error !== '' || localError !== '') && (
+        {error && (
           <div className="pass-popup-error">
             <span className="error-icon">⚠️</span>
-            <span>{error || localError}</span>
+            <span>{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="pass-popup-form">
-          <div className="form-group">
-            <label className="form-label">
-              <span className="label-icon">🆔</span>
-              CCCD / CMND
-            </label>
-            <input
-              className="form-input"
-              type="text"
-              name="identification"
-              value={formData.identification}
-              disabled
-              readOnly
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
-              <span className="label-icon">📱</span>
-              Số điện thoại
-            </label>
-            <input
-              className="form-input"
-              type="text"
-              name="phone"
-              value={formData.phone}
-              disabled
-              readOnly
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
+          <div className="pass-popup-form-group">
+            <label className="pass-popup-label">
               <span className="label-icon">🔒</span>
-              Mật khẩu hiện tại
+              Mật khẩu cũ
             </label>
             <input
-              className="form-input"
+              className="pass-popup-input"
               type="password"
-              name="currentPassword"
-              value={formData.currentPassword}
-              onChange={handleChange}
-              placeholder="Nhập mật khẩu hiện tại"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Nhập mật khẩu cũ"
               disabled={loading}
-              required
+              autoComplete="current-password"
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">
+          <div className="pass-popup-form-group">
+            <label className="pass-popup-label">
               <span className="label-icon">🔐</span>
               Mật khẩu mới
             </label>
             <input
-              className="form-input"
+              className="pass-popup-input"
               type="password"
-              name="newPassword"
-              value={formData.newPassword}
-              onChange={handleChange}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Nhập mật khẩu mới"
               disabled={loading}
-              required
-              minLength={6}
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div className="pass-popup-form-group">
+            <label className="pass-popup-label">
+              <span className="label-icon">🔐</span>
+              Xác nhận mật khẩu mới
+            </label>
+            <input
+              className="pass-popup-input"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Nhập lại mật khẩu mới"
+              disabled={loading}
+              autoComplete="new-password"
             />
           </div>
 
           <div className="pass-popup-actions">
             <button
               type="button"
-              className="cancel-button"
+              className="btn btn-cancel"
               onClick={onClose}
               disabled={loading}
             >
@@ -144,7 +139,7 @@ const PassPopup = ({ identification, phone, onClose, onSubmit, loading, error })
             </button>
             <button
               type="submit"
-              className="confirm-button"
+              className="btn btn-confirm"
               disabled={loading}
             >
               {loading ? (
