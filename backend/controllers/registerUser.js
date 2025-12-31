@@ -1,5 +1,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
+import HouseHold from "../models/houseHoldModel.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -31,6 +33,7 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       dob,
       address,
+      householdId: null,
     });
 
     await newUser.save();
@@ -42,6 +45,7 @@ export const registerUser = async (req, res) => {
         id: newUser._id,
         identification: newUser.identification,
         name: newUser.name,
+        household: newUser.household || null,
       },
     });
   } catch (error) {

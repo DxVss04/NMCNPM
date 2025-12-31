@@ -13,7 +13,7 @@ const router = express.Router();
 
 // User route
 router.get("/households/:identification_head/bills", getAllBillsByHousehold);
-router.get("/user/:householdId/bills", getBillsByHouseholdId);
+router.get("/user/:userId/bills", getBillsByHouseholdId);
 // Admin routes
 router.post("/create-bill", createBill);
 router.get("/get-bills", getAllBills);

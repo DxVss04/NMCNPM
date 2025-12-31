@@ -7,8 +7,8 @@ const userSchema = mongoose.Schema({
     unique: true,
   },
   householdId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "HouseHold",
+    type: String,
+    default: null,
     required: false,
   },
   name: {

@@ -1,6 +1,7 @@
 import HouseHold from "../models/houseHoldModel.js";
 import Bill from "../models/bill.js";
 import mongoose from "mongoose";
+import User from "../models/userModel.js";
 
 const ELECTRIC_UNIT_PRICE = 3000;
 const WATER_UNIT_PRICE = 15000;
@@ -318,15 +319,28 @@ export const countHouseholdsWithUnpaidBills = async (req, res) => {
 //7. User xem hóa đơn bằng householdId
 export const getBillsByHouseholdId = async (req, res) => {
   try {
-    const { householdId } = req.params;
+    //Vd API: /user/:userId/bills (GET /user/64b8f0c2e1d3f2a5c6b7d8e9/bills)
+    const { userId } = req.params; // ✅ CHỈ cần userId
 
-    // Kiểm tra household có tồn tại không
+    // 1. Lấy user → TỰ ĐỘNG lấy householdId
+    const user = await User.findById(userId).populate("householdId");
+    if (!user) {
+      return res.status(404).json({ message: "User không tồn tại" });
+    }
+
+    // 2. Lấy householdId từ user
+    const householdId = user.householdId;
+    if (!householdId) {
+      return res.status(400).json({ message: "User chưa thuộc household nào" });
+    }
+
+    // 3. Check household tồn tại
     const household = await HouseHold.findById(householdId);
     if (!household) {
       return res.status(404).json({ message: "Household not found" });
     }
 
-    // Lấy tất cả hóa đơn của household
+    // 4. Lấy bills của household
     const bills = await Bill.find({ houseHold: householdId })
       .populate("houseHold", "namehousehold identification_head address")
       .sort({ "billItem.createdAt": -1 });
@@ -343,7 +357,6 @@ export const getBillsByHouseholdId = async (req, res) => {
       bills,
     });
   } catch (error) {
-    console.error("Get bills error:", error);
     res.status(500).json({ message: error.message });
   }
 };

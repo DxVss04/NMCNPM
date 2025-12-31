@@ -1,5 +1,6 @@
 import User from "../models/userModel.js";
 import HouseHold from "../models/houseHoldModel.js";
+import mongoose from "mongoose";
 
 // 1.Create a new household
 export const createHouseHold = async (req, res) => {
@@ -82,6 +83,7 @@ export const getAllHouseHolds = async (req, res) => {
 
 export const addMemberToHouseHold = async (req, res) => {
   try {
+    // API /household/add-member
     const { houseHoldId, newMemberId, relationship, identification, name } =
       req.body;
 
@@ -97,27 +99,27 @@ export const addMemberToHouseHold = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 3. Kiểm tra user đã thuộc hộ nào chưa
-    if (newMember.household) {
+    // ✅ SỬA 1: householdId thay vì household
+    if (newMember.householdId) {
+      // ← CHỈNH TỪ household → householdId
       return res.status(400).json({
         message: "User already belongs to another household",
       });
     }
 
-    // 4. Thêm user vào hộ
-    newMember.household = houseHoldId;
+    // ✅ SỬA 2: householdId thay vì household
+    newMember.householdId = houseHoldId; // ← CHỈNH TỪ household → householdId
     await newMember.save();
 
     // 5. Thêm vào mảng members của household với đầy đủ thông tin
-    if (houseHoldInfo.members) {
-      houseHoldInfo.members.push({
-        _id: newMemberId,
-        name: name || newMember.name, // Ưu tiên name từ request, fallback sang name từ User
-        identification: identification,
-        relationship: relationship,
-      });
-      await houseHoldInfo.save();
-    }
+    houseHoldInfo.members.push({
+      // ← Bỏ if check, push trực tiếp
+      _id: newMemberId,
+      name: name || newMember.name,
+      identification: identification || newMember.identification, // ✅ Fallback identification
+      relationship: relationship,
+    });
+    await houseHoldInfo.save();
 
     res.status(200).json({
       message: "Member added successfully",
@@ -129,7 +131,7 @@ export const addMemberToHouseHold = async (req, res) => {
         id: newMember._id,
         name: name || newMember.name,
         relationship: relationship,
-        identification: identification,
+        identification: identification || newMember.identification,
       },
     });
   } catch (error) {
