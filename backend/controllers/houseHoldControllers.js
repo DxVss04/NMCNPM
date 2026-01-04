@@ -84,8 +84,7 @@ export const getAllHouseHolds = async (req, res) => {
 export const addMemberToHouseHold = async (req, res) => {
   try {
     // API /household/add-member
-    const { houseHoldId, newMemberId, relationship, identification, name } =
-      req.body;
+    const { houseHoldId, identification, relationship, name } = req.body;
 
     // 1. Kiểm tra household có tồn tại không
     const houseHoldInfo = await HouseHold.findById(houseHoldId);
@@ -93,30 +92,30 @@ export const addMemberToHouseHold = async (req, res) => {
       return res.status(404).json({ message: "Household not found" });
     }
 
-    // 2. Kiểm tra user muốn thêm có tồn tại không
-    const newMember = await User.findById(newMemberId);
+    // 2. Tìm user theo CCCD (identification) thay vì newMemberId
+    const newMember = await User.findOne({ identification });
     if (!newMember) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(404)
+        .json({ message: "User not found with this identification" });
     }
 
-    // ✅ SỬA 1: householdId thay vì household
+    // 3. Kiểm tra user đã thuộc household khác chưa
     if (newMember.householdId) {
-      // ← CHỈNH TỪ household → householdId
       return res.status(400).json({
         message: "User already belongs to another household",
       });
     }
 
-    // ✅ SỬA 2: householdId thay vì household
-    newMember.householdId = houseHoldId; // ← CHỈNH TỪ household → householdId
+    // 4. Gán householdId cho member
+    newMember.householdId = houseHoldId;
     await newMember.save();
 
-    // 5. Thêm vào mảng members của household với đầy đủ thông tin
+    // 5. Thêm vào mảng members của household
     houseHoldInfo.members.push({
-      // ← Bỏ if check, push trực tiếp
-      _id: newMemberId,
+      _id: newMember._id, // Dùng _id từ newMember tìm được
       name: name || newMember.name,
-      identification: identification || newMember.identification, // ✅ Fallback identification
+      identification: identification || newMember.identification,
       relationship: relationship,
     });
     await houseHoldInfo.save();
