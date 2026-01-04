@@ -299,6 +299,47 @@
   font-weight: 500;
 }
 
+/* Logout Button */
+.logout-button {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.logout-button:hover {
+  background: #ffffff;
+  border-color: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+}
+
+.logout-button:active {
+  transform: translateY(0);
+}
+
+.logout-icon {
+  font-size: 18px;
+}
+
+.logout-text {
+  font-size: 15px;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .profile-card {
@@ -320,6 +361,16 @@
   .save-button,
   .change-password-button {
     width: 100%;
+  }
+
+  .logout-button {
+    top: 16px;
+    right: 16px;
+    padding: 10px 16px;
+  }
+
+  .logout-text {
+    font-size: 14px;
   }
 }
 

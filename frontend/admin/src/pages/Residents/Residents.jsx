@@ -1,4 +1,4 @@
-  import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ResidentItem from '../../components/residentItem/residentItem';
 import ResidentPopup from '../../components/residentPopup/residentPopup';
@@ -8,190 +8,190 @@ import './Residents.css';
 const Residents = () => {
   const [households, setHouseholds] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchId, setSearchId] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isResidentPopupOpen, setIsResidentPopupOpen] = useState(false);
   const [isMemberPopupOpen, setIsMemberPopupOpen] = useState(false);
-  const [editingHousehold, setEditingHousehold] = useState(null);
+  const [selectedHouseholdId, setSelectedHouseholdId] = useState(null);
   const [editingMember, setEditingMember] = useState(null);
-  const [selectedHousehold, setSelectedHousehold] = useState(null);
-  const [headerMenuOpen, setHeaderMenuOpen] = useState(false);
-  const headerMenuRef = useRef(null);
-  const searchInputRef = useRef(null);
+  const householdsRef = useRef([]);
 
-  const API_URL = import.meta.env.VITE_API_URL || '';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-  useEffect(() => {
-    fetchHouseholds();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (headerMenuRef.current && !headerMenuRef.current.contains(event.target)) {
-        setHeaderMenuOpen(false);
-      }
-    };
-
-    if (headerMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [headerMenuOpen]);
-
+  // Fetch all households
   const fetchHouseholds = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/house-hold/all-households`);
-      const data = response.data.households || response.data || [];
-      setHouseholds(Array.isArray(data) ? data : []);
+      const response = await axios.get(`${API_URL}/house-hold/all-households`, {
+        params: { page: 1 }
+      });
+      const data = response.data || [];
+      setHouseholds(data);
+      householdsRef.current = data;
     } catch (error) {
       console.error('Error fetching households:', error);
-      alert('Không thể tải danh sách hộ gia đình. Vui lòng thử lại.');
+      // Fallback to JSON file if API fails
+      try {
+        const response = await fetch('/src/pages/Residents/Residents.json');
+        const data = await response.json();
+        setHouseholds(data);
+        householdsRef.current = data;
+      } catch (jsonError) {
+        console.error('Error loading JSON:', jsonError);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchHouseholds();
+  }, []);
+
+  // Search functionality - scroll to household
   const handleSearch = () => {
-    if (!searchId.trim()) return;
-    
-    const household = households.find(h => 
-      h.identification_head?.toLowerCase() === searchId.trim().toLowerCase()
+    if (!searchQuery.trim()) return;
+
+    const foundHousehold = households.find(
+      h => h.identification_head === searchQuery.trim()
     );
 
-    if (household) {
-      const element = document.getElementById(`household-${household._id}`);
+    if (foundHousehold) {
+      const element = document.getElementById(`household-${foundHousehold._id}`);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        element.style.backgroundColor = '#fff3cd';
+        // Highlight the element
+        element.style.transition = 'all 0.3s';
+        element.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.5)';
         setTimeout(() => {
-          element.style.backgroundColor = '';
+          element.style.boxShadow = '';
         }, 2000);
       }
     } else {
-      alert('Không tìm thấy hộ gia đình với ID này.');
+      alert('Không tìm thấy hộ gia đình với CCCD này');
     }
   };
 
-  const handleCreateHousehold = () => {
-    setEditingHousehold(null);
-    setIsResidentPopupOpen(true);
-    setHeaderMenuOpen(false);
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
-  const handleDeleteAllHouseholds = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa tất cả hộ gia đình? Hành động này không thể hoàn tác!')) {
-      return;
-    }
-
+  // Create new household
+  const handleCreateHousehold = async (formData) => {
     try {
-      // Note: API endpoint might need to be adjusted based on actual backend implementation
-      await axios.delete(`${API_URL}/house-hold/delete-all-households`);
-      setHouseholds([]);
-      alert('Đã xóa tất cả hộ gia đình.');
+      const response = await axios.post(
+        `${API_URL}/house-hold/create-household`,
+        {
+          name: formData.name,
+          address: formData.address,
+          identification_head: formData.identification_head
+        }
+      );
+      
+      // Refresh households list
+      await fetchHouseholds();
+      return response.data;
     } catch (error) {
-      console.error('Error deleting all households:', error);
-      alert('Không thể xóa tất cả hộ gia đình. Vui lòng thử lại.');
-    }
-    setHeaderMenuOpen(false);
-  };
-
-  const handleSaveHousehold = async (householdData) => {
-    try {
-      if (editingHousehold) {
-        // Update household - might need to check if this API exists
-        await axios.patch(`${API_URL}/house-hold/update-household/${editingHousehold._id}`, householdData);
-        setHouseholds(prev => prev.map(h => 
-          h._id === editingHousehold._id ? { ...h, ...householdData } : h
-        ));
-      } else {
-        // Create new household
-        await axios.post(`${API_URL}/house-hold/create-household`, householdData);
-        fetchHouseholds();
-      }
-      setIsResidentPopupOpen(false);
-      setEditingHousehold(null);
-    } catch (error) {
-      console.error('Error saving household:', error);
-      alert(editingHousehold 
-        ? 'Không thể cập nhật hộ gia đình. Vui lòng thử lại.' 
-        : 'Không thể tạo hộ gia đình. Vui lòng thử lại.');
+      throw error;
     }
   };
 
-  const handleDeleteHousehold = async (householdId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa hộ gia đình này?')) {
-      return;
-    }
-
-    try {
-      await axios.delete(`${API_URL}/house-hold/delete-household`, {
-        data: { householdId }
-      });
-      setHouseholds(prev => prev.filter(h => h._id !== householdId));
-    } catch (error) {
-      console.error('Error deleting household:', error);
-      alert('Không thể xóa hộ gia đình. Vui lòng thử lại.');
-    }
-  };
-
-  const handleAddMember = (household) => {
-    setSelectedHousehold(household);
+  // Add member to household
+  const handleAddMember = (householdId) => {
+    setSelectedHouseholdId(householdId);
     setEditingMember(null);
     setIsMemberPopupOpen(true);
   };
 
-  const handleEditMember = (household, member) => {
-    setSelectedHousehold(household);
-    setEditingMember(member);
-    setIsMemberPopupOpen(true);
+  const handleSaveMember = async (memberData, action) => {
+    try {
+      if (action === 'add') {
+        // Send member data according to member.json structure
+        const response = await axios.patch(
+          `${API_URL}/house-hold/add-member`,
+          {
+            houseHoldId: memberData.houseHoldId,
+            identification: memberData.identification,
+            name: memberData.name,
+            relationship: memberData.relationship
+          }
+        );
+        
+        await fetchHouseholds();
+        return response.data;
+      } else if (action === 'edit') {
+        // For editing a member, we would need to update the member in the household
+        // Since there's no update endpoint, we could remove and re-add
+        // For now, we'll show a message
+        alert('Chức năng sửa thành viên: Vui lòng xóa và thêm lại thành viên với thông tin mới.');
+        await fetchHouseholds();
+      }
+    } catch (error) {
+      // Provide helpful error message
+      const errorMsg = error.response?.data?.message || error.message;
+      if (errorMsg.includes('not found') || errorMsg.includes('Invalid')) {
+        throw new Error('Không tìm thấy người dùng với CCCD này. Vui lòng kiểm tra lại hoặc đảm bảo người dùng đã được đăng ký trong hệ thống.');
+      }
+      throw error;
+    }
   };
 
-  const handleDeleteMember = async (householdId, memberId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa thành viên này?')) {
-      return;
-    }
-
+  // Delete member from household
+  const handleDeleteMember = async (memberId, householdId, isHead) => {
+    console.log("memberId gửi lên:", memberId);
+    console.log("householdId:", householdId);
+    console.log("isHead:", isHead);
     try {
-      await axios.patch(`${API_URL}/house-hold/remove-member`, {
-        householdId,
-        memberId
-      });
-      fetchHouseholds();
+      if (isHead) {
+        // Use handle-head-removal endpoint for head of household
+        await axios.delete(
+          `${API_URL}/house-hold/handle-head-removal/${householdId}`
+        );
+      } else {
+        // Use remove-member endpoint for regular members
+        // Always pass the memberId (userID) to backend
+        await axios.patch(
+          `${API_URL}/house-hold/remove-member`,
+          { memberId: memberId }
+        );
+      }
+      
+      await fetchHouseholds();
     } catch (error) {
       console.error('Error deleting member:', error);
-      alert('Không thể xóa thành viên. Vui lòng thử lại.');
+      alert(error.response?.data?.message || 'Có lỗi xảy ra khi xóa thành viên');
     }
   };
 
-  const handleSaveMember = async (memberData) => {
+  // Delete household
+  const handleDeleteHousehold = async (householdId) => {
     try {
-      if (editingMember) {
-        // Update member - might need custom endpoint
-        await axios.patch(`${API_URL}/house-hold/update-member`, {
-          householdId: selectedHousehold._id,
-          memberId: editingMember._id,
-          ...memberData
-        });
-      } else {
-        // Add new member
-        await axios.patch(`${API_URL}/house-hold/add-member`, {
-          householdId: selectedHousehold._id,
-          ...memberData
-        });
+      // Try with param in URL first (as controller expects req.params.householdId)
+      // If route doesn't support it, try with body
+      try {
+        await axios.delete(
+          `${API_URL}/house-hold/delete-household/${householdId}`
+        );
+      } catch (paramError) {
+        // If param approach fails, try with body
+        await axios.delete(
+          `${API_URL}/house-hold/delete-household`,
+          { data: { householdId } }
+        );
       }
-      fetchHouseholds();
-      setIsMemberPopupOpen(false);
-      setSelectedHousehold(null);
-      setEditingMember(null);
+      await fetchHouseholds();
     } catch (error) {
-      console.error('Error saving member:', error);
-      alert(editingMember 
-        ? 'Không thể cập nhật thành viên. Vui lòng thử lại.' 
-        : 'Không thể thêm thành viên. Vui lòng thử lại.');
+      console.error('Error deleting household:', error);
+      alert(error.response?.data?.message || 'Có lỗi xảy ra khi xóa hộ gia đình');
     }
+  };
+
+  // Edit member
+  const handleEditMember = (member, householdId) => {
+    setSelectedHouseholdId(householdId);
+    setEditingMember(member);
+    setIsMemberPopupOpen(true);
   };
 
   return (
@@ -201,95 +201,88 @@ const Residents = () => {
         <div className="header-actions">
           <div className="search-container">
             <input
-              ref={searchInputRef}
               type="text"
               className="search-input"
-              placeholder="Tìm kiếm theo ID chủ hộ (CCCD)..."
-              value={searchId}
-              onChange={(e) => setSearchId(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Tìm kiếm theo CCCD chủ hộ..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
             />
             <button className="search-btn" onClick={handleSearch}>
               🔍
             </button>
           </div>
-          <div className="header-menu-container" ref={headerMenuRef}>
-            <button 
-              className="header-menu-toggle"
-              onClick={() => setHeaderMenuOpen(!headerMenuOpen)}
-            >
-              <span className="menu-dots">⋯</span>
-            </button>
-            {headerMenuOpen && (
-              <div className="header-menu-dropdown">
-                <button 
-                  className="menu-item menu-item-add"
-                  onClick={handleCreateHousehold}
-                >
-                  <span className="menu-icon">➕</span>
-                  <span>Thêm hộ gia đình</span>
-                </button>
-                <button 
-                  className="menu-item menu-item-delete-all"
-                  onClick={handleDeleteAllHouseholds}
-                >
-                  <span className="menu-icon">🗑️</span>
-                  <span>Xóa tất cả hộ</span>
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            className="header-menu-toggle"
+            onClick={() => setIsResidentPopupOpen(true)}
+            style={{
+              background: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#667eea',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#f0f4ff';
+              e.target.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'white';
+              e.target.style.transform = 'scale(1)';
+            }}
+          >
+            ➕ Thêm hộ gia đình
+          </button>
         </div>
       </div>
 
       <div className="residents-container">
-        {loading && (
+        {loading ? (
           <div className="loading-indicator">
             <div className="loading-spinner"></div>
-            <p>Đang tải...</p>
+            <p>Đang tải dữ liệu...</p>
           </div>
-        )}
-
-        {!loading && households.length === 0 && (
+        ) : households.length === 0 ? (
           <div className="empty-state">
-            <p>Chưa có hộ gia đình nào.</p>
+            <p>Chưa có hộ gia đình nào. Hãy thêm hộ gia đình đầu tiên!</p>
           </div>
+        ) : (
+          households.map((household) => (
+            <ResidentItem
+              key={household._id}
+              household={household}
+              onViewMembers={() => {}}
+              onAddMember={handleAddMember}
+              onDeleteHousehold={handleDeleteHousehold}
+              onEditMember={handleEditMember}
+              onDeleteMember={handleDeleteMember}
+            />
+          ))
         )}
-
-        {!loading && households.map((household) => (
-          <ResidentItem
-            key={household._id}
-            household={household}
-            onDelete={handleDeleteHousehold}
-            onAddMember={handleAddMember}
-            onEditMember={handleEditMember}
-            onDeleteMember={handleDeleteMember}
-          />
-        ))}
       </div>
 
-      {isResidentPopupOpen && (
-        <ResidentPopup
-          household={editingHousehold}
-          onClose={() => {
-            setIsResidentPopupOpen(false);
-            setEditingHousehold(null);
-          }}
-          onSave={handleSaveHousehold}
-        />
-      )}
+      <ResidentPopup
+        isOpen={isResidentPopupOpen}
+        onClose={() => setIsResidentPopupOpen(false)}
+        onSubmit={handleCreateHousehold}
+      />
 
-      {isMemberPopupOpen && selectedHousehold && (
-        <MemberPopup
-          member={editingMember}
-          onClose={() => {
-            setIsMemberPopupOpen(false);
-            setSelectedHousehold(null);
-            setEditingMember(null);
-          }}
-          onSave={handleSaveMember}
-        />
-      )}
+      <MemberPopup
+        isOpen={isMemberPopupOpen}
+        onClose={() => {
+          setIsMemberPopupOpen(false);
+          setEditingMember(null);
+          setSelectedHouseholdId(null);
+        }}
+        onSubmit={handleSaveMember}
+        householdId={selectedHouseholdId}
+        editingMember={editingMember}
+      />
     </div>
   );
 };

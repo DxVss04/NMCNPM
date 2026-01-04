@@ -45,6 +45,7 @@ const Login = () => {
         // Lưu thông tin vào sessionStorage
         sessionStorage.setItem("isAuth", "true");
         sessionStorage.setItem("userId", response.data.user.id.toString());
+        sessionStorage.setItem("identification", response.data.user.identification || identification);
         
         setToast("Đăng nhập thành công! Đang chuyển hướng...");
         

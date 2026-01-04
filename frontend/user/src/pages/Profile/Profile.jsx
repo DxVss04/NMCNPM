@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import PassPopup from "../../components/passPopup/passPopup";
 import "./Profile.css";
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [userData, setUserData] = useState({
     identification: "",
     name: "",
@@ -39,8 +41,15 @@ export default function Profile() {
 
       if (response.data && response.data.user) {
         const user = response.data.user;
+        const userIdentification = user.identification || "";
+        
+        // Lưu identification vào sessionStorage nếu chưa có
+        if (userIdentification && !sessionStorage.getItem("identification")) {
+          sessionStorage.setItem("identification", userIdentification);
+        }
+        
         setUserData({
-          identification: user.identification || "",
+          identification: userIdentification,
           name: user.name || "",
           phone: user.phone || "",
           address: user.address || "",
@@ -69,14 +78,22 @@ export default function Profile() {
 
     try {
       const userId = sessionStorage.getItem("userId");
+      const identification = sessionStorage.getItem("identification") || userData.identification;
+      
       if (!userId) {
         setError("Không tìm thấy thông tin đăng nhập");
         setLoading(false);
         return;
       }
 
+      if (!identification) {
+        setError("Không tìm thấy số CCCD/CMND. Vui lòng đăng nhập lại.");
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.patch(`${API_URL}/user/update-profile`, {
-        userId,
+        identification,
         phone,
       });
 
@@ -105,8 +122,26 @@ export default function Profile() {
     setShowPassPopup(false);
   };
 
+  const handleLogout = () => {
+    // Xóa thông tin đăng nhập khỏi sessionStorage
+    sessionStorage.removeItem("isAuth");
+    sessionStorage.removeItem("userId");
+    sessionStorage.removeItem("identification");
+    // Chuyển hướng về trang đăng nhập
+    navigate("/login", { replace: true });
+  };
+
   return (
     <div className="profile-page">
+      <button
+        type="button"
+        className="logout-button"
+        onClick={handleLogout}
+        title="Đăng xuất"
+      >
+        <span className="logout-icon">🚪</span>
+        <span className="logout-text">Đăng xuất</span>
+      </button>
       <div className="profile-container">
         <div className="profile-card">
           <div className="profile-header">

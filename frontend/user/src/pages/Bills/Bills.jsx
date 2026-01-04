@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import BillItem from '../../components/billItem/billItem';
 import './Bills.css';
 
 const Bills = () => {
@@ -7,6 +8,7 @@ const Bills = () => {
   const [household, setHousehold] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'paid', 'unpaid'
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -41,46 +43,57 @@ const Bills = () => {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   const getBillTypeLabel = (type) => {
     const typeMap = {
-      electricity: 'Điện',
-      water: 'Nước',
-      garbage: 'Rác',
-      management: 'Quản lý',
-      parking: 'Gửi xe',
+      electricity: 'Tiền điện',
+      water: 'Tiền nước',
+      garbage: 'Tiền rác',
+      management: 'Phí quản lý',
+      parking: 'Phí gửi xe',
       other: 'Khác'
     };
     return typeMap[type] || type;
   };
 
-  const getTotalBillAmount = (bill) => {
-    if (bill.totalAmount) {
-      return bill.totalAmount;
+  const getStatusLabel = (status) => {
+    if (status === true || status === 'paid') {
+      return 'Đã thanh toán';
     }
-    // Nếu không có totalAmount, tính từ billItem
-    if (bill.billItem && typeof bill.billItem === 'object') {
-      const { electric = 0, water = 0, internet = 0, other = 0 } = bill.billItem;
-      return electric + water + internet + other;
-    }
-    return 0;
+    return 'Chưa thanh toán';
   };
+
+  const getBillStatus = (billItemStatus) => {
+    return billItemStatus === true || billItemStatus === 'paid';
+  };
+
+  const filterBills = (billsList) => {
+    if (statusFilter === 'all') {
+      return billsList;
+    }
+    
+    return billsList.filter((bill) => {
+      const firstBillItem = Array.isArray(bill.billItem) && bill.billItem.length > 0 
+        ? bill.billItem[0] 
+        : null;
+      
+      if (!firstBillItem) {
+        return false;
+      }
+
+      const isPaid = getBillStatus(firstBillItem.status);
+      
+      if (statusFilter === 'paid') {
+        return isPaid;
+      } else if (statusFilter === 'unpaid') {
+        return !isPaid;
+      }
+      
+      return true;
+    });
+  };
+
+  const filteredBills = filterBills(bills);
 
   return (
     <div className="bills-page">
@@ -98,6 +111,33 @@ const Bills = () => {
           )}
         </div>
 
+        {/* Filter Buttons */}
+        {!loading && !error && bills.length > 0 && (
+          <div className="bills-filter">
+            <button
+              className={`filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('all')}
+            >
+              <span className="filter-icon">📋</span>
+              <span>Toàn bộ</span>
+            </button>
+            <button
+              className={`filter-btn ${statusFilter === 'paid' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('paid')}
+            >
+              <span className="filter-icon">✓</span>
+              <span>Đã thanh toán</span>
+            </button>
+            <button
+              className={`filter-btn ${statusFilter === 'unpaid' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('unpaid')}
+            >
+              <span className="filter-icon">○</span>
+              <span>Chưa thanh toán</span>
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className="loading-indicator">
             <div className="loading-spinner"></div>
@@ -113,72 +153,36 @@ const Bills = () => {
             <span className="empty-icon">📋</span>
             <p>Chưa có hóa đơn nào.</p>
           </div>
+        ) : filteredBills.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">🔍</span>
+            <p>Không tìm thấy hóa đơn nào với bộ lọc đã chọn.</p>
+          </div>
         ) : (
           <div className="bills-list">
-            {bills.map((bill) => {
-              const totalAmount = getTotalBillAmount(bill);
-              const isPaid = bill.status === 'paid' || bill.status === true;
-              
+            {filteredBills.map((bill) => {
+              // Lấy billItem đầu tiên từ mảng billItem
+              const firstBillItem = Array.isArray(bill.billItem) && bill.billItem.length > 0 
+                ? bill.billItem[0] 
+                : null;
+
+              if (!firstBillItem) {
+                return null;
+              }
+
+              const billType = getBillTypeLabel(bill.type);
+              const amount = firstBillItem.amount || 0;
+              const status = getStatusLabel(firstBillItem.status);
+              const createdAt = firstBillItem.createdAt;
+
               return (
-                <div key={bill._id} className={`bill-card ${isPaid ? 'paid' : 'unpaid'}`}>
-                  <div className="bill-header">
-                    <div className="bill-type">
-                      <span className="type-icon">
-                        {bill.type === 'electricity' && '⚡'}
-                        {bill.type === 'water' && '💧'}
-                        {bill.type === 'garbage' && '🗑️'}
-                        {bill.type === 'management' && '🏢'}
-                        {bill.type === 'parking' && '🚗'}
-                        {!['electricity', 'water', 'garbage', 'management', 'parking'].includes(bill.type) && '📄'}
-                      </span>
-                      <span className="type-label">{getBillTypeLabel(bill.type)}</span>
-                    </div>
-                    <div className={`bill-status ${isPaid ? 'status-paid' : 'status-unpaid'}`}>
-                      <span className="status-icon">{isPaid ? '✓' : '○'}</span>
-                      <span className="status-text">{isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}</span>
-                    </div>
-                  </div>
-
-                  {bill.billItem && typeof bill.billItem === 'object' && (
-                    <div className="bill-details">
-                      {bill.billItem.electric > 0 && (
-                        <div className="detail-item">
-                          <span className="detail-label">Điện:</span>
-                          <span className="detail-value">{formatCurrency(bill.billItem.electric)}</span>
-                        </div>
-                      )}
-                      {bill.billItem.water > 0 && (
-                        <div className="detail-item">
-                          <span className="detail-label">Nước:</span>
-                          <span className="detail-value">{formatCurrency(bill.billItem.water)}</span>
-                        </div>
-                      )}
-                      {bill.billItem.internet > 0 && (
-                        <div className="detail-item">
-                          <span className="detail-label">Internet:</span>
-                          <span className="detail-value">{formatCurrency(bill.billItem.internet)}</span>
-                        </div>
-                      )}
-                      {bill.billItem.other > 0 && (
-                        <div className="detail-item">
-                          <span className="detail-label">Khác:</span>
-                          <span className="detail-value">{formatCurrency(bill.billItem.other)}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="bill-footer">
-                    <div className="bill-total">
-                      <span className="total-label">Tổng cộng:</span>
-                      <span className="total-amount">{formatCurrency(totalAmount)}</span>
-                    </div>
-                    <div className="bill-date">
-                      <span className="date-label">Ngày tạo:</span>
-                      <span className="date-value">{formatDate(bill.createdAt)}</span>
-                    </div>
-                  </div>
-                </div>
+                <BillItem
+                  key={bill._id}
+                  billType={billType}
+                  amount={amount}
+                  status={status}
+                  createdAt={createdAt}
+                />
               );
             })}
           </div>
