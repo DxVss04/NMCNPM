@@ -14,7 +14,7 @@ const Posts = () => {
   const observerRef = useRef(null);
   const loadingRef = useRef(null);
 
-  const API_URL = import.meta.env.VITE_API_URL || '';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   const POSTS_PER_PAGE = 10;
 
   const fetchPosts = useCallback(async (pageNum, append = false) => {

@@ -73,12 +73,11 @@ const ResidentItem = ({ household, onViewMembers, onAddMember, onDeleteHousehold
     const isHead = memberName === household.namehead;
     
     if (isHead) {
-      if (window.confirm(`Bạn có chắc chắn muốn xóa chủ hộ "${memberName}"? Hệ thống sẽ tự động chuyển quyền chủ hộ cho thành viên khác.`)) {
-        onDeleteMember(memberId, household._id, true);
-      }
+      // Xác nhận xóa chủ hộ - xác nhận đã được xử lý trong Residents.jsx
+      onDeleteMember(memberId, household._id, true, memberName);
     } else {
       if (window.confirm(`Bạn có chắc chắn muốn xóa thành viên "${memberName}"?`)) {
-        onDeleteMember(memberId, household._id, false);
+        onDeleteMember(memberId, household._id, false, memberName);
       }
     }
   };

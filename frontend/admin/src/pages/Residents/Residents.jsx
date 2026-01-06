@@ -5,6 +5,7 @@ import ResidentPopup from '../../components/residentPopup/residentPopup';
 import MemberPopup from '../../components/memberPopup/memberPopup';
 import './Residents.css';
 
+
 const Residents = () => {
   const [households, setHouseholds] = useState([]);
   const [loading, setLoading] = useState(false);
