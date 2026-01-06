@@ -37,7 +37,7 @@ router.patch("/posts/toggle-pin/:postId", togglePinPost);
 //2.---Cap nhat bai viet
 router.patch("/posts/update/:postId", updatePost);
 //IV.Delete post
-router.delete("/posts/delete/:postId", deletePost);
+router.delete("/delete/:postId", deletePost);
 //Xóa tất cả bài viết (chỉ admin)
 router.delete("/posts/delete-all", deleteAllPosts);
 export default router;

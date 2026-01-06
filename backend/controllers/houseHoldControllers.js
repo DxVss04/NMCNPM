@@ -142,56 +142,47 @@ export const addMemberToHouseHold = async (req, res) => {
 
 export const removeMemberFromHouseHold = async (req, res) => {
   try {
-    const { memberId } = req.body; // hoặc req.params
+    const { identification } = req.body;
 
-    // Kiểm tra member có tồn tại không
-    const memberToRemove = await User.findById(memberId);
+    // 1. Tìm user theo CCCD
+    const memberToRemove = await User.findOne({ identification });
     if (!memberToRemove) {
-      return res.status(404).json({ message: "Member not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Kiểm tra member có thuộc hộ nào không
-    if (!memberToRemove.household) {
+    // 2. Tìm household theo identification trong members
+    const houseHoldInfo = await HouseHold.findOne({
+      members: { $elemMatch: { identification } },
+    });
+
+    if (!houseHoldInfo) {
       return res
-        .status(400)
-        .json({ message: "This user does not belong to any household" });
+        .status(404)
+        .json({ message: "User not found in any household" });
     }
 
-    const houseHoldInfo = await HouseHold.findById(memberToRemove.household);
-
-    // Không cho phép xóa chủ hộ
-    if (houseHoldInfo && memberToRemove.name === houseHoldInfo.namehead) {
+    // 3. Không cho xóa chủ hộ
+    if (memberToRemove.identification === houseHoldInfo.identification_head) {
       return res.status(400).json({
-        message:
-          "Cannot remove the head of household. Please transfer ownership first or delete the household.",
+        message: "Cannot remove head of household",
       });
     }
 
-    // Lưu thông tin để trả về
-    const householdId = memberToRemove.household;
-    const memberName = memberToRemove.name;
-
-    // Xóa household khỏi member
-    await User.findByIdAndUpdate(memberId, {
-      $unset: { household: "" },
+    // 4. Xóa householdId khỏi User (sử dụng $unset để xóa field hoàn toàn)
+    await User.findByIdAndUpdate(memberToRemove._id, {
+      $unset: { householdId: "", household: "" }, // Xóa cả householdId và household nếu có
     });
 
-    // Xóa khỏi array members nếu có
-    if (
-      houseHoldInfo &&
-      houseHoldInfo.members &&
-      Array.isArray(houseHoldInfo.members)
-    ) {
-      houseHoldInfo.members = houseHoldInfo.members.filter(
-        (m) => m.toString() !== memberId.toString()
-      );
-      await houseHoldInfo.save();
-    }
+    // 5. Xóa khỏi household.members
+    houseHoldInfo.members = houseHoldInfo.members.filter(
+      (m) => m.identification !== identification
+    );
+    await houseHoldInfo.save();
 
-    res.status(200).json({
+    res.json({
       message: "Member removed successfully",
-      removedMember: memberName,
-      household: houseHoldInfo?.namehead,
+      removedMember: memberToRemove.name,
+      household: houseHoldInfo.namehousehold,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -215,14 +206,14 @@ export const deleteHouseHold = async (req, res) => {
       household: householdId,
     });
 
-    // Xóa household
-    await HouseHold.findByIdAndDelete(householdId);
-
-    // Xóa household trong thông tin user
+    // Cập nhật householdId thành null trong thông tin user TRƯỚC
     await User.updateMany(
-      { household: householdId },
-      { $unset: { household: "" } }
+      { householdId: householdId },
+      { $set: { householdId: null } }
     );
+
+    // Xóa household SAU khi đã cập nhật user
+    await HouseHold.findByIdAndDelete(householdId);
 
     res.status(200).json({
       message: "Household deleted successfully",

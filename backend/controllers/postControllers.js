@@ -126,8 +126,8 @@ export const updatePost = async (req, res) => {
 
 export const deletePost = async (req, res) => {
   try {
-    const { id } = req.params;
-    const deletedPost = await Post.findByIdAndDelete(id);
+    const { postId } = req.params;
+    const deletedPost = await Post.findByIdAndDelete(postId);
     if (!deletedPost) {
       return res.status(404).json({ message: "Post not found" });
     }

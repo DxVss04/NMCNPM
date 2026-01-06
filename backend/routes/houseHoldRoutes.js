@@ -25,7 +25,7 @@ router.get(
 //2.Get all households (paginated)
 router.get("/all-households", getAllHouseHolds);
 //IIII. Delete household (only head of household allowed)
-router.delete("/delete-household", deleteHouseHold);
+router.delete("/delete-household/:householdId", deleteHouseHold);
 router.delete("/handle-head-removal/:householdId", handleHeadRemoval);
 //V. Get household statistics
 router.get("/statistics", getHouseHoldStatistics);
