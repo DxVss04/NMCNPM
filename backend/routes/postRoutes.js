@@ -28,7 +28,7 @@ router.post("/posts", (req, res) => {
 });
 //II.Read posts
 //1.---Xem tat ca bai viet
-router.get("/posts", getAllPosts);
+router.get("/getall", getAllPosts);
 //2.---Xem bai viet moi nhat
 router.get("/posts/latest", getLatestPosts);
 //III.Update post

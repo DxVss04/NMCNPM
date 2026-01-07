@@ -27,11 +27,16 @@ export const getAllPosts = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
+
+    // ✅ ĐẾM TOTAL POSTS (không đổi)
     const totalPosts = await Post.countDocuments();
 
-    // Lấy bài viết theo trang
+    // ✅ QUAN TRỌNG: Sort GHIM LÊN ĐẦU TRƯỚC, createdAt SAU
     const posts = await Post.find()
-      .sort({ createdAt: -1 })
+      .sort({
+        isPinned: -1, // 1. GHIM (true=1) lên ĐẦU
+        createdAt: -1, // 2. Trong cùng nhóm → mới nhất trước
+      })
       .skip(skip)
       .limit(limit);
 
