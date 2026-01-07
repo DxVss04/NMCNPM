@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './residentItem.css';
 
-const ResidentItem = ({ household, onViewMembers, onAddMember, onDeleteHousehold, onEditMember, onDeleteMember }) => {
+const ResidentItem = ({ household, onViewMembers, onAddMember, onDeleteHousehold, onDeleteMember }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const menuRef = useRef(null);
@@ -68,16 +68,26 @@ const ResidentItem = ({ household, onViewMembers, onAddMember, onDeleteHousehold
     setShowMenu(false);
   };
 
-  const handleDeleteMember = (memberId, memberName) => {
+  const handleDeleteMember = (member, memberName) => {
     // Kiểm tra xem member có phải chủ hộ không bằng cách so sánh name với household.namehead
-    const isHead = memberName === household.namehead;
+    const isHead = memberName === household.namehead || member.identification === household.identification_head;
+    
+    // Lấy identification của member (CCCD/CMND)
+    const memberIdentification = member.identification;
+    
+    if (!memberIdentification) {
+      alert('Không tìm thấy thông tin CCCD/CMND của thành viên');
+      return;
+    }
     
     if (isHead) {
-      // Xác nhận xóa chủ hộ - xác nhận đã được xử lý trong Residents.jsx
-      onDeleteMember(memberId, household._id, true, memberName);
+      // Xác nhận xóa chủ hộ - xác nhận sẽ được xử lý trong Residents.jsx
+      // Truyền identification để backend có thể xử lý
+      onDeleteMember(memberIdentification, household._id, true, memberName);
     } else {
       if (window.confirm(`Bạn có chắc chắn muốn xóa thành viên "${memberName}"?`)) {
-        onDeleteMember(memberId, household._id, false, memberName);
+        // Truyền identification (CCCD/CMND) thay vì memberId
+        onDeleteMember(memberIdentification, household._id, false, memberName);
       }
     }
   };
@@ -159,15 +169,8 @@ const ResidentItem = ({ household, onViewMembers, onAddMember, onDeleteHousehold
                   </div>
                   <div className="member-actions">
                     <button
-                      className="btn-member btn-edit-member"
-                      onClick={() => onEditMember(member, household._id)}
-                      title="Sửa thành viên"
-                    >
-                      ✏️
-                    </button>
-                    <button
                       className="btn-member btn-delete-member"
-                      onClick={() => handleDeleteMember(member._id, member.name)}
+                      onClick={() => handleDeleteMember(member, member.name)}
                       title="Xóa thành viên"
                     >
                       🗑️

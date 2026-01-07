@@ -21,7 +21,7 @@ const Posts = () => {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get(`${API_URL}/posts/posts`, {
+      const response = await axios.get(`${API_URL}/posts/getall`, {
         params: {
           page: pageNum,
           limit: POSTS_PER_PAGE
@@ -118,7 +118,5 @@ const Posts = () => {
     </div>
   );
 };
-<div>
-  <p>"tooi"</p>
-</div>
+
 export default Posts;

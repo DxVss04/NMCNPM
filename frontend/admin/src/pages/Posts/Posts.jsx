@@ -20,7 +20,7 @@ const Posts = () => {
   const fetchPosts = useCallback(async (pageNum, append = false) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/posts/posts`, {
+      const response = await axios.get(`${API_URL}/posts/getall`, {
         params: {
           page: pageNum,
           limit: POSTS_PER_PAGE
@@ -78,7 +78,7 @@ const Posts = () => {
 
   const handleDelete = async (postId) => {
     try {
-      await axios.delete(`${API_URL}/posts/posts/delete/${postId}`);
+      await axios.delete(`${API_URL}/posts/delete/${postId}`);
       setPosts(prev => prev.filter(p => p._id !== postId));
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -88,27 +88,26 @@ const Posts = () => {
 
   const handleTogglePin = async (postId) => {
     try {
-      await axios.patch(`${API_URL}/posts/posts/toggle-pin/${postId}`);
+      const response = await axios.patch(`${API_URL}/posts/posts/toggle-pin/${postId}`);
       
-      const post = posts.find(p => p._id === postId);
-      const wasPinned = post?.isPinned;
+      // Backend đã trả về post đã được cập nhật và đã sort (ghim lên đầu)
+      // Cập nhật post trong danh sách và refresh để đảm bảo sort đúng
+      const updatedPost = response.data.post;
       
       setPosts(prev => {
         const updated = prev.map(p => 
-          p._id === postId ? { ...p, isPinned: !p.isPinned } : p
+          p._id === postId ? { ...p, ...updatedPost } : p
         );
         
-        if (!wasPinned) {
-          const pinnedPost = updated.find(p => p._id === postId);
-          const others = updated.filter(p => p._id !== postId);
-          return [pinnedPost, ...others];
-        } else {
-          const unpinnedPost = updated.find(p => p._id === postId);
-          const others = updated.filter(p => p._id !== postId);
-          const pinnedPosts = others.filter(p => p.isPinned);
-          const unpinnedPosts = others.filter(p => !p.isPinned);
-          return [...pinnedPosts, unpinnedPost, ...unpinnedPosts];
-        }
+        // Sort lại: ghim lên đầu, sau đó sort theo createdAt
+        const pinnedPosts = updated.filter(p => p.isPinned).sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        const unpinnedPosts = updated.filter(p => !p.isPinned).sort((a, b) => 
+          new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        
+        return [...pinnedPosts, ...unpinnedPosts];
       });
     } catch (error) {
       console.error('Error toggling pin:', error);
@@ -133,36 +132,52 @@ const Posts = () => {
 
   const handleSavePost = async (postData) => {
     try {
-      const formData = new FormData();
-      formData.append('title', postData.title);
-      formData.append('content', postData.content);
-      formData.append('isPinned', postData.isPinned);
-
       if (editingPost) {
         // Update existing post
-        // If there's a new file, append it; otherwise keep existing imageUrl
-        if (postData.file) {
-          formData.append('image', postData.file);
-        } else if (postData.imageUrl) {
-          formData.append('imageUrl', postData.imageUrl);
-        }
+        // Backend chỉ nhận JSON với title, content, imageUrl, isPinned
+        // Không hỗ trợ upload file mới trong update
+        const updateData = {
+          title: postData.title,
+          content: postData.content,
+          isPinned: postData.isPinned || false,
+          imageUrl: postData.imageUrl || null
+        };
         
         const response = await axios.patch(
-          `${API_URL}/posts/posts/update/${editingPost._id}`, 
-          formData,
+          `${API_URL}/posts/update/${editingPost._id}`, 
+          updateData,
           {
             headers: {
-              'Content-Type': 'multipart/form-data'
+              'Content-Type': 'application/json'
             }
           }
         );
         
         const updatedPost = response.data;
-        setPosts(prev => prev.map(p => 
-          p._id === editingPost._id ? { ...p, ...updatedPost } : p
-        ));
+        
+        // Cập nhật post trong danh sách và sort lại (ghim lên đầu)
+        setPosts(prev => {
+          const updated = prev.map(p => 
+            p._id === editingPost._id ? { ...p, ...updatedPost } : p
+          );
+          
+          // Sort lại: ghim lên đầu, sau đó sort theo createdAt
+          const pinnedPosts = updated.filter(p => p.isPinned).sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          const unpinnedPosts = updated.filter(p => !p.isPinned).sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          
+          return [...pinnedPosts, ...unpinnedPosts];
+        });
       } else {
-        // Create new post
+        // Create new post - vẫn dùng FormData vì có multer
+        const formData = new FormData();
+        formData.append('title', postData.title);
+        formData.append('content', postData.content);
+        formData.append('isPinned', postData.isPinned || false);
+        
         if (postData.file) {
           formData.append('image', postData.file);
         }

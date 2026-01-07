@@ -13,16 +13,26 @@ const Residents = () => {
   const [isResidentPopupOpen, setIsResidentPopupOpen] = useState(false);
   const [isMemberPopupOpen, setIsMemberPopupOpen] = useState(false);
   const [selectedHouseholdId, setSelectedHouseholdId] = useState(null);
-  const [editingMember, setEditingMember] = useState(null);
   const householdsRef = useRef([]);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  
+  // Helper to build API endpoint URL
+  const getApiUrl = (endpoint) => {
+    // Remove leading slash from endpoint if present
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    // Check if API_URL already contains /api
+    if (API_URL.includes('/api')) {
+      return `${API_URL}/${cleanEndpoint}`;
+    }
+    return `${API_URL}/api/${cleanEndpoint}`;
+  };
 
   // Fetch all households
   const fetchHouseholds = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/house-hold/all-households`, {
+      const response = await axios.get(getApiUrl('house-hold/all-households'), {
         params: { page: 1 }
       });
       const data = response.data || [];
@@ -82,7 +92,7 @@ const Residents = () => {
   const handleCreateHousehold = async (formData) => {
     try {
       const response = await axios.post(
-        `${API_URL}/house-hold/create-household`,
+        getApiUrl('house-hold/create-household'),
         {
           name: formData.name,
           address: formData.address,
@@ -101,33 +111,24 @@ const Residents = () => {
   // Add member to household
   const handleAddMember = (householdId) => {
     setSelectedHouseholdId(householdId);
-    setEditingMember(null);
     setIsMemberPopupOpen(true);
   };
 
-  const handleSaveMember = async (memberData, action) => {
+  const handleSaveMember = async (memberData) => {
     try {
-      if (action === 'add') {
-        // Send member data according to member.json structure
-        const response = await axios.patch(
-          `${API_URL}/house-hold/add-member`,
-          {
-            houseHoldId: memberData.houseHoldId,
-            identification: memberData.identification,
-            name: memberData.name,
-            relationship: memberData.relationship
-          }
-        );
-        
-        await fetchHouseholds();
-        return response.data;
-      } else if (action === 'edit') {
-        // For editing a member, we would need to update the member in the household
-        // Since there's no update endpoint, we could remove and re-add
-        // For now, we'll show a message
-        alert('Chức năng sửa thành viên: Vui lòng xóa và thêm lại thành viên với thông tin mới.');
-        await fetchHouseholds();
-      }
+      // Send member data to add new member
+      const response = await axios.patch(
+        getApiUrl('house-hold/add-member'),
+        {
+          houseHoldId: memberData.houseHoldId,
+          identification: memberData.identification,
+          name: memberData.name,
+          relationship: memberData.relationship
+        }
+      );
+      
+      await fetchHouseholds();
+      return response.data;
     } catch (error) {
       // Provide helpful error message
       const errorMsg = error.response?.data?.message || error.message;
@@ -139,61 +140,64 @@ const Residents = () => {
   };
 
   // Delete member from household
-  const handleDeleteMember = async (memberId, householdId, isHead) => {
-    console.log("memberId gửi lên:", memberId);
-    console.log("householdId:", householdId);
-    console.log("isHead:", isHead);
+  const handleDeleteMember = async (memberIdentification, householdId, isHead, memberName) => {
     try {
       if (isHead) {
-        // Use handle-head-removal endpoint for head of household
-        await axios.delete(
-          `${API_URL}/house-hold/handle-head-removal/${householdId}`
+        // Xác nhận xóa chủ hộ - sẽ chuyển quyền cho thành viên thứ 2
+        const confirmMessage = `Bạn có chắc chắn muốn xóa chủ hộ "${memberName}"?\n\n` +
+          `Hệ thống sẽ tự động chuyển quyền chủ hộ cho thành viên tiếp theo trong hộ gia đình.`;
+        
+        if (!window.confirm(confirmMessage)) {
+          return;
+        }
+
+        // Use handle-head-removal endpoint - backend sẽ tự tìm chủ hộ và chuyển quyền
+        const response = await axios.delete(
+          getApiUrl(`house-hold/handle-head-removal/${householdId}`)
         );
+        
+        if (response.data) {
+          alert(`Đã xóa chủ hộ và chuyển quyền cho ${response.data.newHead || 'thành viên tiếp theo'}`);
+        }
       } else {
-        // Use remove-member endpoint for regular members
-        // Always pass the memberId (userID) to backend
+        // Use remove-member endpoint - backend cần identification (CCCD/CMND)
         await axios.patch(
-          `${API_URL}/house-hold/remove-member`,
-          { memberId: memberId }
+          getApiUrl('house-hold/remove-member'),
+          { identification: memberIdentification }
         );
+        alert('Đã xóa thành viên khỏi hộ gia đình');
       }
       
+      // Refresh danh sách hộ gia đình
       await fetchHouseholds();
     } catch (error) {
       console.error('Error deleting member:', error);
-      alert(error.response?.data?.message || 'Có lỗi xảy ra khi xóa thành viên');
+      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi xóa thành viên';
+      alert(errorMessage);
     }
   };
 
   // Delete household
   const handleDeleteHousehold = async (householdId) => {
     try {
-      // Try with param in URL first (as controller expects req.params.householdId)
-      // If route doesn't support it, try with body
-      try {
-        await axios.delete(
-          `${API_URL}/house-hold/delete-household/${householdId}`
-        );
-      } catch (paramError) {
-        // If param approach fails, try with body
-        await axios.delete(
-          `${API_URL}/house-hold/delete-household`,
-          { data: { householdId } }
-        );
+      // Backend expects householdId in URL params
+      // Backend sẽ tự động xóa householdId khỏi tất cả users thuộc hộ này
+      const response = await axios.delete(
+        getApiUrl(`house-hold/delete-household/${householdId}`)
+      );
+      
+      if (response.data) {
+        alert(`Đã xóa hộ gia đình thành công. ${response.data.affectedMembers || 0} thành viên đã được cập nhật.`);
       }
+      
       await fetchHouseholds();
     } catch (error) {
       console.error('Error deleting household:', error);
-      alert(error.response?.data?.message || 'Có lỗi xảy ra khi xóa hộ gia đình');
+      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi xóa hộ gia đình';
+      alert(errorMessage);
     }
   };
 
-  // Edit member
-  const handleEditMember = (member, householdId) => {
-    setSelectedHouseholdId(householdId);
-    setEditingMember(member);
-    setIsMemberPopupOpen(true);
-  };
 
   return (
     <div className="residents-page">
@@ -260,7 +264,6 @@ const Residents = () => {
               onViewMembers={() => {}}
               onAddMember={handleAddMember}
               onDeleteHousehold={handleDeleteHousehold}
-              onEditMember={handleEditMember}
               onDeleteMember={handleDeleteMember}
             />
           ))
@@ -277,12 +280,10 @@ const Residents = () => {
         isOpen={isMemberPopupOpen}
         onClose={() => {
           setIsMemberPopupOpen(false);
-          setEditingMember(null);
           setSelectedHouseholdId(null);
         }}
         onSubmit={handleSaveMember}
         householdId={selectedHouseholdId}
-        editingMember={editingMember}
       />
     </div>
   );
