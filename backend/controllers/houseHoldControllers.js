@@ -230,40 +230,61 @@ export const deleteHouseHold = async (req, res) => {
 export const handleHeadRemoval = async (req, res) => {
   try {
     const { householdId } = req.params;
-
     const houseHoldInfo = await HouseHold.findById(householdId);
+
     if (!houseHoldInfo) {
-      return res.status(404).json({
-        message: "Household not found",
-      });
+      return res.status(404).json({ message: "Household not found" });
     }
 
-    // Tìm tất cả thành viên còn lại (trừ chủ hộ cũ)
-    const remainingMembers = await User.find({
-      household: householdId,
-      name: { $ne: houseHoldInfo.namehead },
-    }).sort({ createdAt: 1 });
+    // 1. Tìm chủ hộ hiện tại trong members
+    const currentHeadIndex = houseHoldInfo.members.findIndex(
+      (member) => member.identification === houseHoldInfo.identification_head
+    );
+
+    if (currentHeadIndex === -1) {
+      return res.status(404).json({ message: "Current head not found" });
+    }
+
+    // 2. Lấy thành viên còn lại
+    const remainingMembers = houseHoldInfo.members.filter(
+      (_, index) => index !== currentHeadIndex
+    );
 
     if (remainingMembers.length === 0) {
-      // Không còn thành viên nào -> Xóa hộ
+      // Xóa hộ trống + xóa householdId của chủ hộ cuối
+      await User.findOneAndUpdate(
+        { identification: houseHoldInfo.identification_head },
+        { $unset: { householdId: "" } }
+      );
       await HouseHold.findByIdAndDelete(householdId);
       return res.status(200).json({
         message: "Household deleted - no members remaining",
-        deletedHousehold: houseHoldInfo.namehead,
       });
     }
 
-    // Có thành viên còn lại -> Chuyển quyền cho người đầu tiên
+    // 3. ✅ XÓA householdId của CHỦ HỘ CŨ trong User collection
+    await User.findOneAndUpdate(
+      { identification: houseHoldInfo.identification_head },
+      { $unset: { householdId: "" } } // ← QUAN TRỌNG
+    );
+
+    // 4. Chuyển quyền cho thành viên còn lại
     const newHead = remainingMembers[0];
     await HouseHold.findByIdAndUpdate(householdId, {
       namehead: newHead.name,
+      identification_head: newHead.identification,
+      members: remainingMembers.map((member) => ({
+        ...member,
+        relationship:
+          member.name === newHead.name ? "Chủ" : member.relationship,
+      })),
     });
 
     res.status(200).json({
       message: "Household head transferred successfully",
       oldHead: houseHoldInfo.namehead,
       newHead: newHead.name,
-      remainingMembers: remainingMembers.length,
+      oldHeadHouseholdIdRemoved: true, // Xác nhận đã xóa
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
