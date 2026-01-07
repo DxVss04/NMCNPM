@@ -68,10 +68,10 @@ export const getLatestPosts = async (req, res) => {
 
 export const togglePinPost = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { postId } = req.params;
 
     // Tìm bài viết theo ID
-    const post = await Post.findById(id);
+    const post = await Post.findById(postId);
     if (!post) {
       return res.status(404).json({
         message: "Post not found",
@@ -101,10 +101,10 @@ export const togglePinPost = async (req, res) => {
 
 export const updatePost = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { postId } = req.params;
     const { title, content, imageUrl, isPinned } = req.body;
     const updatedPost = await Post.findByIdAndUpdate(
-      id,
+      postId,
       { title, content, imageUrl, isPinned },
       { new: true }
     );

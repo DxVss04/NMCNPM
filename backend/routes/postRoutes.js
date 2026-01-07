@@ -35,7 +35,7 @@ router.get("/posts/latest", getLatestPosts);
 //1.---Ghim/bo ghim bai viet
 router.patch("/posts/toggle-pin/:postId", togglePinPost);
 //2.---Cap nhat bai viet
-router.patch("/posts/update/:postId", updatePost);
+router.patch("/update/:postId", updatePost);
 //IV.Delete post
 router.delete("/delete/:postId", deletePost);
 //Xóa tất cả bài viết (chỉ admin)
